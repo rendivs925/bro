@@ -1,6 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["src"]
+members = [
+    "src/domain",
+    "src/application",
+    "src/infrastructure",
+    "src/presentation",
+    "src/shared",
+    "src/cli"
+]
 
 [workspace.package]
 name = "bro"
