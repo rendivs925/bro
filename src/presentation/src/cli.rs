@@ -333,7 +333,7 @@ fn validate_command_syntax(command: &str) -> std::result::Result<(), String> {
     Ok(())
 }
 
-#[derive(Parser, Clone)]
+#[derive(Parser, Default, Clone)]
 #[command(name = "bro")]
 #[command(about = "Voice-powered AI CLI assistant with RAG capabilities")]
 pub struct Cli {
@@ -656,7 +656,7 @@ impl CliApp {
         Ok(())
     }
 
-    async fn handle_plan_mode(&self, goal: &str) -> Result<()> {
+    pub async fn handle_plan_mode(&self, goal: &str) -> Result<()> {
         if goal.trim().is_empty() {
             println!(
                 "{}",
@@ -736,7 +736,7 @@ impl CliApp {
         Ok(())
     }
 
-    async fn handle_build(
+    pub async fn handle_build(
         &mut self,
         goal: &str,
         dry_run: bool,
@@ -2567,7 +2567,7 @@ impl CliApp {
         Ok(())
     }
 
-    async fn handle_agent(&self, task: &str) -> Result<()> {
+    pub async fn handle_agent(&self, task: &str) -> Result<()> {
         // Analyze task and generate execution plan
         let plan = analyze_agent_task(task).await?;
 
@@ -2712,7 +2712,7 @@ impl CliApp {
         Ok(())
     }
 
-    async fn handle_rag(&mut self, question: &str, enable_streaming: bool) -> Result<()> {
+    pub async fn handle_rag(&mut self, question: &str, enable_streaming: bool) -> Result<()> {
         if let Some(cached_response) = self.load_cached_rag(question)? {
             println!("{}", cached_response);
             if ask_confirmation("Use this cached answer?", true)? {

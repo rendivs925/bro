@@ -3,6 +3,7 @@
 /debug/
 **/*.rs.bk
 Cargo.lock
+*piper/
 
 # IDE and editor files
 .vscode/

@@ -17,6 +17,7 @@ use ratatui::{
 };
 
 use crate::cli::{Cli, CliApp};
+use clap::Parser;
 
 /// TUI application state
 pub struct TuiApp {
@@ -30,6 +31,7 @@ pub struct TuiApp {
     current_session: Option<String>,
     command_history: Vec<String>,
     history_index: Option<usize>,
+    tui_mode: Option<String>, // Current TUI mode (plan, build, run, chat, etc.)
 }
 
 /// TUI runner that manages the terminal
@@ -76,6 +78,7 @@ impl TuiApp {
             current_session: Some("default_session".to_string()),
             command_history: Vec::new(),
             history_index: None,
+            tui_mode: None,
         })
     }
 }
@@ -428,24 +431,23 @@ impl TuiRunner {
         match key {
             '1' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Switched to PLAN mode ".to_string();
+                let _ = self.switch_tui_mode("plan");
             }
             '2' => {
                 self.app.show_overlay = None;
-                self.app.status_message =
-                    "Help: i=insert, :q=quit, hjkl=navigate, Ctrl+P/N=history ".to_string();
+                let _ = self.switch_tui_mode("build");
             }
             '3' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Switched to RUN mode ".to_string();
+                let _ = self.switch_tui_mode("run");
             }
             '4' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Switched to CHAT mode ".to_string();
+                let _ = self.switch_tui_mode("chat");
             }
             '5' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Switched to RAG mode ".to_string();
+                let _ = self.switch_tui_mode("rag");
             }
             _ => {}
         }
@@ -648,32 +650,48 @@ impl TuiRunner {
                 self.execute_shell_command(command).await
             }
             Some("plan") => {
-                // Plan mode command
-                self.execute_plan_command(&parts[1..].join(" ")).await
+                // Plan mode command - delegate to CliApp
+                self.execute_plan_mode(&parts[1..].join(" ")).await
             }
             Some("build") => {
-                // Build mode command
-                self.execute_build_command(&parts[1..].join(" ")).await
+                // Build mode command - delegate to CliApp
+                self.execute_build_mode(&parts[1..].join(" ")).await
             }
-            Some("run") => {
-                // Run mode command
-                self.execute_run_command(&parts[1..].join(" ")).await
+            Some("run") | Some("agent") => {
+                // Run mode command - delegate to CliApp
+                self.execute_run_mode(&parts[1..].join(" ")).await
             }
             Some("chat") => {
-                // Chat mode command
-                self.execute_chat_command(&parts[1..].join(" ")).await
+                // Chat mode command - delegate to CliApp
+                self.execute_chat_mode(&parts[1..].join(" ")).await
             }
             Some("rag") => {
-                // RAG mode command
-                self.execute_rag_command(&parts[1..].join(" ")).await
+                // RAG mode command - delegate to CliApp
+                self.execute_rag_mode(&parts[1..].join(" ")).await
             }
             Some("vision") => {
-                // Vision mode command
-                self.execute_vision_command(&parts[1..].join(" ")).await
+                // Vision mode command - not yet implemented in TUI
+                Ok(format!("Vision mode not yet implemented in TUI"))
+            }
+            Some("mode") => {
+                // Switch TUI mode
+                Ok(self.switch_tui_mode(&parts[1..].join(" "))?)
             }
             _ => {
-                // Default: try to execute as shell command
-                self.execute_shell_command(command).await
+                // Check if we're in a specific mode - if so, execute command in that mode
+                if let Some(mode) = &self.app.tui_mode {
+                    match mode.as_str() {
+                        "plan" => self.execute_plan_mode(command).await,
+                        "build" => self.execute_build_mode(command).await,
+                        "run" => self.execute_run_mode(command).await,
+                        "chat" => self.execute_chat_mode(command).await,
+                        "rag" => self.execute_rag_mode(command).await,
+                        _ => self.execute_shell_command(command).await,
+                    }
+                } else {
+                    // Default: try to execute as shell command
+                    self.execute_shell_command(command).await
+                }
             }
         };
 
@@ -706,42 +724,135 @@ impl TuiRunner {
     }
 
     /// Execute a plan mode command
-    async fn execute_plan_command(&mut self, goal: &str) -> Result<String> {
-        // In a real implementation, this would call the CLI plan logic
-        Ok(format!(
-            "Plan created for: '{}'. Use build mode to execute.",
-            goal
-        ))
+    async fn execute_plan_mode(&mut self, goal: &str) -> Result<String> {
+        // Create a temporary CLI instance for plan mode
+        let mut cli = Cli {
+            plan: true,
+            args: vec![goal.to_string()],
+            ..Default::default()
+        };
+
+        // Set session if active
+        if let Some(session) = &self.app.current_session {
+            cli.session = Some(session.clone());
+        }
+
+        // Call CliApp's plan handler
+        match self.app.cli_app.handle_plan_mode(goal).await {
+            Ok(_) => Ok(format!("Plan created for: '{}'", goal)),
+            Err(e) => Err(anyhow::anyhow!("Plan mode failed: {}", e)),
+        }
     }
 
     /// Execute a build mode command
-    async fn execute_build_command(&mut self, goal: &str) -> Result<String> {
-        // In a real implementation, this would call the CLI build logic
-        Ok(format!(
-            "Build executed for: '{}'. Changes applied safely.",
-            goal
-        ))
+    async fn execute_build_mode(&mut self, goal: &str) -> Result<String> {
+        // Create a temporary CLI instance for build mode
+        let mut cli = Cli {
+            build: true,
+            args: vec![goal.to_string()],
+            ..Default::default()
+        };
+
+        // Set session if active
+        if let Some(session) = &self.app.current_session {
+            cli.session = Some(session.clone());
+        }
+
+        // Call CliApp's build handler
+        match self
+            .app
+            .cli_app
+            .handle_build(goal, false, false, false)
+            .await
+        {
+            Ok(_) => Ok(format!("Build completed for: '{}'", goal)),
+            Err(e) => Err(anyhow::anyhow!("Build mode failed: {}", e)),
+        }
     }
 
     /// Execute a run mode command
-    async fn execute_run_command(&mut self, goal: &str) -> Result<String> {
-        // In a real implementation, this would call the CLI run logic
-        Ok(format!("Multi-step execution completed for: '{}'.", goal))
+    async fn execute_run_mode(&mut self, goal: &str) -> Result<String> {
+        // Create a temporary CLI instance for run mode
+        let mut cli = Cli {
+            run: true,
+            args: vec![goal.to_string()],
+            ..Default::default()
+        };
+
+        // Set session if active
+        if let Some(session) = &self.app.current_session {
+            cli.session = Some(session.clone());
+        }
+
+        // Call CliApp's agent handler (run mode)
+        match self.app.cli_app.handle_agent(goal).await {
+            Ok(_) => Ok(format!("Run completed for: '{}'", goal)),
+            Err(e) => Err(anyhow::anyhow!("Run mode failed: {}", e)),
+        }
     }
 
     /// Execute a chat mode command
-    async fn execute_chat_command(&mut self, message: &str) -> Result<String> {
-        // In a real implementation, this would call the CLI chat logic
-        Ok(format!("Chat response: 'Hello! You said: {}'", message))
+    async fn execute_chat_mode(&mut self, message: &str) -> Result<String> {
+        // For now, just indicate chat mode - full chat integration would need more work
+        Ok(format!("Chat mode: '{}'", message))
     }
 
     /// Execute a RAG mode command
-    async fn execute_rag_command(&mut self, query: &str) -> Result<String> {
-        // In a real implementation, this would call the CLI RAG logic
-        Ok(format!(
-            "RAG query executed: '{}'. Found relevant context.",
-            query
-        ))
+    async fn execute_rag_mode(&mut self, query: &str) -> Result<String> {
+        // Create a temporary CLI instance for RAG mode
+        let mut cli = Cli {
+            rag: true,
+            args: vec![query.to_string()],
+            ..Default::default()
+        };
+
+        // Set session if active
+        if let Some(session) = &self.app.current_session {
+            cli.session = Some(session.clone());
+        }
+
+        // Call CliApp's RAG handler
+        match self.app.cli_app.handle_rag(query, false).await {
+            Ok(_) => Ok(format!("RAG query completed: '{}'", query)),
+            Err(e) => Err(anyhow::anyhow!("RAG mode failed: {}", e)),
+        }
+    }
+
+    /// Switch TUI mode
+    fn switch_tui_mode(&mut self, mode: &str) -> Result<String> {
+        match mode {
+            "plan" => {
+                self.app.tui_mode = Some("plan".to_string());
+                self.app.status_message = "Switched to PLAN mode".to_string();
+                Ok("Switched to PLAN mode".to_string())
+            }
+            "build" => {
+                self.app.tui_mode = Some("build".to_string());
+                self.app.status_message = "Switched to BUILD mode".to_string();
+                Ok("Switched to BUILD mode".to_string())
+            }
+            "run" => {
+                self.app.tui_mode = Some("run".to_string());
+                self.app.status_message = "Switched to RUN mode".to_string();
+                Ok("Switched to RUN mode".to_string())
+            }
+            "chat" => {
+                self.app.tui_mode = Some("chat".to_string());
+                self.app.status_message = "Switched to CHAT mode".to_string();
+                Ok("Switched to CHAT mode".to_string())
+            }
+            "rag" => {
+                self.app.tui_mode = Some("rag".to_string());
+                self.app.status_message = "Switched to RAG mode".to_string();
+                Ok("Switched to RAG mode".to_string())
+            }
+            _ => {
+                self.app.tui_mode = None;
+                self.app.status_message =
+                    format!("Unknown mode: {}. Switched to normal mode.", mode);
+                Ok(format!("Unknown mode: {}. Switched to normal mode.", mode))
+            }
+        }
     }
 
     /// Execute a vision mode command using ChatGPT browser automation
@@ -919,9 +1030,27 @@ impl TuiRunner {
 
         // Mode indicator
         let mode_text = match app.current_mode {
-            TuiMode::Normal => "NORMAL",
-            TuiMode::Insert => "INSERT",
-            TuiMode::Command => "COMMAND",
+            TuiMode::Normal => {
+                if let Some(tui_mode) = &app.tui_mode {
+                    format!("NORMAL ({})", tui_mode.to_uppercase())
+                } else {
+                    "NORMAL".to_string()
+                }
+            }
+            TuiMode::Insert => {
+                if let Some(tui_mode) = &app.tui_mode {
+                    format!("INSERT ({})", tui_mode.to_uppercase())
+                } else {
+                    "INSERT".to_string()
+                }
+            }
+            TuiMode::Command => {
+                if let Some(tui_mode) = &app.tui_mode {
+                    format!("COMMAND ({})", tui_mode.to_uppercase())
+                } else {
+                    "COMMAND".to_string()
+                }
+            }
         };
         let mode = Paragraph::new(mode_text)
             .style(
@@ -1019,13 +1148,62 @@ impl TuiRunner {
             .split(area);
 
         let hints = match app.current_mode {
-            TuiMode::Normal => vec![
-                format!("i {}", "insert"),
-                format!("Cmd+P {}", "palette"),
-                format!("Cmd+S {}", "sessions"),
-                format!("Cmd+K {}", "tools"),
-                format!(": {}", "cmd"),
-            ],
+            TuiMode::Normal => {
+                if let Some(mode) = &app.tui_mode {
+                    match mode.as_str() {
+                        "plan" => vec![
+                            format!("plan {}", "command"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                        "build" => vec![
+                            format!("build {}", "command"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                        "run" => vec![
+                            format!("run {}", "command"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                        "chat" => vec![
+                            format!("chat {}", "message"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                        "rag" => vec![
+                            format!("rag {}", "query"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                        _ => vec![
+                            format!("i {}", "insert"),
+                            format!("Cmd+P {}", "palette"),
+                            format!("Cmd+S {}", "sessions"),
+                            format!("Cmd+K {}", "tools"),
+                            format!(": {}", "cmd"),
+                        ],
+                    }
+                } else {
+                    vec![
+                        format!("i {}", "insert"),
+                        format!("Cmd+P {}", "palette"),
+                        format!("Cmd+S {}", "sessions"),
+                        format!("Cmd+K {}", "tools"),
+                        format!(": {}", "cmd"),
+                    ]
+                }
+            }
             TuiMode::Insert => vec![
                 format!("esc {}", "normal"),
                 format!("Enter {}", "execute"),
