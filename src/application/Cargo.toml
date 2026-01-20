@@ -1,0 +1,36 @@
+[package]
+name = "application"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+domain = { path = "../domain" }
+shared = { path = "../shared" }
+infrastructure = { path = "../infrastructure" }
+anyhow.workspace = true
+tokio.workspace = true
+md5 = "0.7"
+uuid.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+colored.workspace = true
+num_cpus.workspace = true
+tokio-stream = "0.1"
+futures = "0.3"
+regex = "1.10"
+petgraph = "0.6"
+once_cell = "1.19"
+git2 = "0.18"
+ reqwest.workspace = true
+ chrono.workspace = true
+ async-trait = "0.1"
+ tracing = "0.1"
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false

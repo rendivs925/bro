@@ -1,0 +1,23 @@
+[package]
+name = "shared"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+dialoguer.workspace = true
+crossterm.workspace = true
+colored.workspace = true
+rayon.workspace = true
+num_cpus.workspace = true
+regex = "1.10"
+bumpalo.workspace = true
+fxhash.workspace = true
+lazy_static.workspace = true
+tokio.workspace = true
+lz4 = "1.24"
+bincode.workspace = true

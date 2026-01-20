@@ -4433,6 +4433,7 @@ dependencies = [
  "anyhow",
  "application",
  "arboard",
+ "axum 0.7.9",
  "bincode",
  "chrono",
  "clap",
@@ -4450,7 +4451,9 @@ dependencies = [
  "serde",
  "serde_json",
  "shared",
+ "strsim",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
