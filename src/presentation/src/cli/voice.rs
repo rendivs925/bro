@@ -68,6 +68,7 @@ impl VoiceHandler {
             "model/vosk-model-small-en-us-0.15",
             "models/vosk-model-en-us-0.22",
             "models/vosk-model-small-en-us-0.15",
+            "models/vosk-model-en-us-0.22-lgraph",
             "/usr/share/vosk/model",
             &home_model_path,
         ];
