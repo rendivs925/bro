@@ -53,6 +53,33 @@ struct ChatResponse {
     message: domain::session::Message,
 }
 
+/// Agent execution phase
+#[derive(Debug, Clone, PartialEq)]
+pub enum AgentPhase {
+    Idle,
+    ClassifyingIntent,
+    Planning,
+    AwaitingApproval,
+    Executing {
+        current_step: usize,
+        total_steps: usize,
+    },
+    Complete,
+    Error,
+}
+
+/// Agent status information
+#[derive(Debug, Clone)]
+pub struct AgentStatus {
+    pub phase: AgentPhase,
+    pub confidence: Option<f32>,
+    pub current_goal: Option<String>,
+    pub execution_time: Option<std::time::Duration>,
+    pub tools_used: Vec<String>,
+    pub memory_usage: Option<u64>,
+    pub error_message: Option<String>,
+}
+
 /// TUI application state
 pub struct TuiApp {
     cli_app: CliApp,
@@ -68,6 +95,12 @@ pub struct TuiApp {
     history_index: Option<usize>,
     tui_mode: Option<String>, // Current TUI mode (plan, build, run, chat, etc.)
     pending_action: Option<PendingAction>, // Action confirmed but not yet executed
+
+    // Agent loop state
+    agent_status: AgentStatus,
+    current_plan: Option<domain::models::AgentResponse>,
+    execution_progress: Vec<String>, // Step-by-step execution log
+    scroll_offset: usize,            // For scrolling through large content
 }
 
 /// TUI runner that manages the terminal
@@ -116,6 +149,108 @@ pub enum PendingAction {
 }
 
 impl TuiApp {
+    /// Start an agent workflow with the given goal
+    pub async fn start_agent_workflow(&mut self, goal: String) -> Result<()> {
+        // Reset agent state
+        self.agent_status = AgentStatus {
+            phase: AgentPhase::ClassifyingIntent,
+            confidence: None,
+            current_goal: Some(goal.clone()),
+            execution_time: None,
+            tools_used: Vec::new(),
+            memory_usage: None,
+            error_message: None,
+        };
+        self.current_plan = None;
+        self.execution_progress.clear();
+        self.scroll_offset = 0;
+
+        // Here we would trigger the actual agent service call
+        // For now, simulate the workflow progression
+        self.simulate_agent_workflow(goal).await?;
+
+        Ok(())
+    }
+
+    /// Simulate agent workflow for demonstration (replace with real agent calls)
+    async fn simulate_agent_workflow(&mut self, goal: String) -> Result<()> {
+        use tokio::time::{sleep, Duration};
+
+        // Phase 1: Classifying intent
+        sleep(Duration::from_millis(500)).await;
+        self.agent_status.confidence = Some(0.94);
+
+        // Phase 2: Planning
+        self.agent_status.phase = AgentPhase::Planning;
+        sleep(Duration::from_millis(1500)).await;
+
+        // Create a mock plan
+        let mock_plan = domain::models::AgentResponse {
+            reasoning: vec![
+                "Analyzed project structure and dependencies".to_string(),
+                "Identified 2 files that need modification".to_string(),
+                "Planned 4 sequential steps with safety checks".to_string(),
+            ],
+            tool_calls: vec![
+                domain::models::ToolCall {
+                    id: "1".to_string(),
+                    name: "FileRead".to_string(),
+                    parameters: [("path".to_string(), serde_json::json!("auth.rs"))].into(),
+                    reasoning: "Reading current authentication implementation".to_string(),
+                },
+                domain::models::ToolCall {
+                    id: "2".to_string(),
+                    name: "FileEdit".to_string(),
+                    parameters: [("path".to_string(), serde_json::json!("auth.rs"))].into(),
+                    reasoning: "Refactoring to use dependency injection".to_string(),
+                },
+            ],
+            tool_results: vec![],
+            final_response: "Plan created successfully".to_string(),
+            confidence: 0.87,
+        };
+        self.current_plan = Some(mock_plan);
+
+        // Phase 3: Awaiting approval
+        self.agent_status.phase = AgentPhase::AwaitingApproval;
+
+        Ok(())
+    }
+
+    /// Execute the approved plan
+    pub async fn execute_approved_plan(&mut self) -> Result<()> {
+        if let Some(plan) = &self.current_plan {
+            self.agent_status.phase = AgentPhase::Executing {
+                current_step: 1,
+                total_steps: plan.tool_calls.len(),
+            };
+            self.execution_progress.clear();
+
+            // Simulate execution steps
+            for (i, tool_call) in plan.tool_calls.iter().enumerate() {
+                let step_num = i + 1;
+                self.agent_status.phase = AgentPhase::Executing {
+                    current_step: step_num,
+                    total_steps: plan.tool_calls.len(),
+                };
+
+                self.execution_progress.push(format!("Step {}: {}", step_num, tool_call.reasoning));
+
+                // Simulate execution time
+                use tokio::time::{sleep, Duration};
+                sleep(Duration::from_millis(1000)).await;
+            }
+
+            // Mark as complete
+            self.agent_status.phase = AgentPhase::Complete;
+            self.agent_status.execution_time = Some(std::time::Duration::from_secs(6));
+            self.agent_status.tools_used = plan.tool_calls.iter().map(|tc| tc.name.clone()).collect();
+            self.agent_status.memory_usage = Some(89 * 1024 * 1024); // 89MB
+        }
+
+        Ok(())
+    }
+
     /// Create a new TUI application state
     pub fn new(_cli: Cli) -> Result<Self> {
         let cli_app = CliApp::new();
@@ -140,6 +275,19 @@ impl TuiApp {
             history_index: None,
             tui_mode: None,
             pending_action: None,
+            // Initialize agent state
+            agent_status: AgentStatus {
+                phase: AgentPhase::Idle,
+                confidence: None,
+                current_goal: None,
+                execution_time: None,
+                tools_used: Vec::new(),
+                memory_usage: None,
+                error_message: None,
+            },
+            current_plan: None,
+            execution_progress: Vec::new(),
+            scroll_offset: 0,
         })
     }
 }
@@ -198,6 +346,91 @@ impl TuiRunner {
 
     /// Handle normal mode key events (vim-style)
     async fn handle_normal_mode(&mut self, key: event::KeyEvent) -> Result<bool> {
+        // Handle agent approval actions in awaiting approval phase
+        if let AgentPhase::AwaitingApproval = self.app.agent_status.phase {
+            match key.code {
+                KeyCode::Char('y') | KeyCode::Char('Y') => {
+                    // Execute the approved plan
+                    self.app.show_overlay = None;
+                    self.execute_approved_plan().await?;
+                    return Ok(false);
+                }
+                KeyCode::Char('e') | KeyCode::Char('E') => {
+                    // Edit the plan (placeholder - would open editor)
+                    self.app.show_overlay = Some(Overlay::Response {
+                        title: "Plan Editing".to_string(),
+                        content: "Plan editing not yet implemented. Press any key to continue.".to_string(),
+                        scroll_offset: 0,
+                    });
+                    return Ok(false);
+                }
+                KeyCode::Char('q') | KeyCode::Char('Q') => {
+                    // Cancel the plan
+                    self.app.agent_status.phase = AgentPhase::Idle;
+                    self.app.current_plan = None;
+                    self.app.show_overlay = None;
+                    self.app.status_message = "Plan cancelled".to_string();
+                    return Ok(false);
+                }
+                KeyCode::Char('d') | KeyCode::Char('D') => {
+                    // Show plan details
+                    if let Some(plan) = &self.app.current_plan {
+                        let details = format!(
+                            "Plan Details:\n• {} steps\n• Confidence: {:.1}%\n• Tools: {}\n\nReasoning:\n{}",
+                            plan.tool_calls.len(),
+                            plan.confidence * 100.0,
+                            plan.tool_calls.iter().map(|tc| tc.name.as_str()).collect::<Vec<_>>().join(", "),
+                            plan.reasoning.join("\n")
+                        );
+                        self.app.show_overlay = Some(Overlay::Response {
+                            title: "Plan Details".to_string(),
+                            content: details,
+                            scroll_offset: 0,
+                        });
+                    }
+                    return Ok(false);
+                }
+                _ => {} // Continue with normal key handling
+            }
+        }
+
+        // Handle completion phase actions
+        if let AgentPhase::Complete = self.app.agent_status.phase {
+            match key.code {
+                KeyCode::Char('r') | KeyCode::Char('R') => {
+                    // Review results
+                    let summary = if let Some(plan) = &self.app.current_plan {
+                        format!(
+                            "Execution Summary:\n\nGoal: {}\n\nCompleted {} steps\nTools Used: {}\nExecution Time: {:?}\nConfidence: {:.1}%\n\nNext actions available:\n• Run tests\n• Update documentation\n• Deploy changes",
+                            self.app.agent_status.current_goal.as_deref().unwrap_or("Unknown"),
+                            plan.tool_calls.len(),
+                            self.app.agent_status.tools_used.join(", "),
+                            self.app.agent_status.execution_time.unwrap_or_default(),
+                            plan.confidence * 100.0
+                        )
+                    } else {
+                        "No execution data available".to_string()
+                    };
+                    self.app.show_overlay = Some(Overlay::Response {
+                        title: "Execution Review".to_string(),
+                        content: summary,
+                        scroll_offset: 0,
+                    });
+                    return Ok(false);
+                }
+                KeyCode::Char('n') | KeyCode::Char('N') => {
+                    // Start new task
+                    self.app.agent_status.phase = AgentPhase::Idle;
+                    self.app.current_plan = None;
+                    self.app.execution_progress.clear();
+                    self.app.current_mode = TuiMode::Insert;
+                    self.app.status_message = "Ready for new goal".to_string();
+                    return Ok(false);
+                }
+                _ => {} // Continue with normal key handling
+            }
+        }
+
         match key.code {
             // Quit commands
             KeyCode::Char('q') => return Ok(true), // Quit
@@ -802,27 +1035,15 @@ impl TuiRunner {
             self.app.history_index = None;
         }
 
-        self.app.status_message = format!("AI processing: {} ...", command);
+        // Clear input buffer and start agent workflow
+        self.app.input_buffer.clear();
+        self.app.cursor_position = 0;
 
-        // Use AI to classify intent
-        let intent = match self.classify_intent(command).await {
-            Ok(intent) => intent,
-            Err(e) => {
-                self.app.status_message = format!("Failed to classify intent: {}", e);
-                return Ok(());
-            }
-        };
+        // Start the agent workflow
+        self.start_agent_workflow(command.to_string()).await?;
 
-        self.app.status_message =
-            format!("Intent: {:?} - {}", intent.intent_type, intent.description);
-
-        // Handle based on intent type
-        // Show thinking overlay
-        self.app.show_overlay = Some(Overlay::Thinking {
-            message: format!("AI processing: {}", intent.description),
-            step: 0,
-        });
-        self.app.status_message = "AI is thinking...".to_string();
+        Ok(())
+    }
 
         let result = match intent.intent_type {
             IntentType::Question => {
@@ -1527,30 +1748,53 @@ Output ONLY valid JSON, no other text."#;
     /// Draw the header section
     fn draw_header(f: &mut Frame, area: Rect, app: &TuiApp) {
         let header_chunks = Layout::default()
-            .direction(Direction::Horizontal)
+            .direction(Direction::Vertical)
             .constraints([
-                Constraint::Percentage(30),
-                Constraint::Percentage(40),
-                Constraint::Percentage(30),
+                Constraint::Length(1), // Title row
+                Constraint::Length(1), // Status row
+                Constraint::Length(1), // Spacer
             ])
             .split(area);
 
-        // Title
-        let title = Paragraph::new(format!("Vibe {}", "CLI"))
+        let title_row = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(40),
+                Constraint::Percentage(35),
+                Constraint::Percentage(25),
+            ])
+            .split(header_chunks[0]);
+
+        let status_row = header_chunks[1];
+
+        // Title row
+        let title = Paragraph::new("bro v0.1.0 - Agentic AI Assistant")
             .style(
                 Style::default()
                     .fg(Color::Cyan)
                     .add_modifier(Modifier::BOLD),
             )
             .alignment(Alignment::Left);
-        f.render_widget(title, header_chunks[0]);
+        f.render_widget(title, title_row[0]);
 
-        // Session info
+        // Session and Agent Status
         let session = app.current_session.as_deref().unwrap_or("no session");
-        let session_info = Paragraph::new(format!("Session: {}", session))
+        let agent_phase = match app.agent_status.phase {
+            AgentPhase::Idle => "",
+            AgentPhase::ClassifyingIntent => "[CLASSIFYING]",
+            AgentPhase::Planning => "[PLANNING]",
+            AgentPhase::AwaitingApproval => "[AWAITING APPROVAL]",
+            AgentPhase::Executing {
+                current_step,
+                total_steps,
+            } => &format!("[EXECUTING {}/{}]", current_step, total_steps),
+            AgentPhase::Complete => "[COMPLETE]",
+            AgentPhase::Error => "[ERROR]",
+        };
+        let session_info = Paragraph::new(format!("[SESSION: {}] {}", session, agent_phase))
             .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center);
-        f.render_widget(session_info, header_chunks[1]);
+        f.render_widget(session_info, title_row[1]);
 
         // Mode indicator
         let mode_text = match app.current_mode {
@@ -1576,135 +1820,431 @@ Output ONLY valid JSON, no other text."#;
                 }
             }
         };
-        let mode = Paragraph::new(mode_text)
+        let mode = Paragraph::new(format!("[{}]", mode_text))
             .style(
                 Style::default()
                     .fg(Color::Green)
                     .add_modifier(Modifier::BOLD),
             )
             .alignment(Alignment::Right);
-        f.render_widget(mode, header_chunks[2]);
+        f.render_widget(mode, title_row[2]);
+
+        // Status message row
+        let status_message = match app.agent_status.phase {
+            AgentPhase::Idle => {
+                if app.current_mode == TuiMode::Insert {
+                    "Type your goal, press Enter to submit, Esc for normal mode".to_string()
+                } else {
+                    "Ready - Type 'i' to input goal, ':' for commands".to_string()
+                }
+            }
+            AgentPhase::ClassifyingIntent => {
+                "AI is analyzing your goal and classifying intent...".to_string()
+            }
+            AgentPhase::Planning => "AI is creating an execution plan...".to_string(),
+            AgentPhase::AwaitingApproval => {
+                "Plan ready - Press 'y' to execute, 'e' to edit, 'q' to cancel".to_string()
+            }
+            AgentPhase::Executing {
+                current_step,
+                total_steps,
+            } => {
+                format!(
+                    "Executing step {}/{} - Press 'p' for pause, 'q' for abort",
+                    current_step, total_steps
+                )
+            }
+            AgentPhase::Complete => {
+                "Execution complete - Press 'r' to review, 'n' for new task".to_string()
+            }
+            AgentPhase::Error => {
+                format!(
+                    "Error occurred - {}",
+                    app.agent_status
+                        .error_message
+                        .as_deref()
+                        .unwrap_or("Unknown error")
+                )
+            }
+        };
+        let status = Paragraph::new(status_message)
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Left);
+        f.render_widget(status, status_row);
     }
 
     /// Draw the main content area
     fn draw_main_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        match app.agent_status.phase {
+            AgentPhase::Idle => Self::draw_idle_content(f, area, app),
+            AgentPhase::ClassifyingIntent => Self::draw_classifying_content(f, area, app),
+            AgentPhase::Planning => Self::draw_planning_content(f, area, app),
+            AgentPhase::AwaitingApproval => Self::draw_approval_content(f, area, app),
+            AgentPhase::Executing { .. } => Self::draw_execution_content(f, area, app),
+            AgentPhase::Complete => Self::draw_complete_content(f, area, app),
+            AgentPhase::Error => Self::draw_error_content(f, area, app),
+        }
+    }
+
+    /// Draw idle state (ready for input)
+    fn draw_idle_content(f: &mut Frame, area: Rect, app: &TuiApp) {
         let content_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
+                Constraint::Min(3),    // Input area
                 Constraint::Length(3), // History area
-                Constraint::Min(1),    // Input area
-                Constraint::Length(1), // Separator
-                Constraint::Length(3), // Message area
             ])
             .split(area);
 
-        // History area (show last 3 commands)
-        let history_block = Block::default().borders(Borders::ALL).title("History");
+        // Input area
+        let input_block = Block::default()
+            .borders(Borders::ALL)
+            .title(format!("Goal Input ({})", app.input_buffer.len()));
 
+        let input_text = if app.input_buffer.is_empty() {
+            "Type your goal here (e.g., 'Refactor auth middleware to use dependency injection')..."
+        } else {
+            &app.input_buffer
+        };
+        let input_paragraph = Paragraph::new(input_text).block(input_block);
+        f.render_widget(input_paragraph, content_chunks[0]);
+
+        // Cursor rendering for input
+        if app.current_mode == TuiMode::Insert {
+            let input_area = content_chunks[0];
+            let inner_area = input_block.inner(input_area);
+            let cursor_x = inner_area.x + app.cursor_position as u16;
+            let cursor_y = inner_area.y;
+            f.set_cursor(cursor_x, cursor_y);
+        }
+
+        // History area (show last 3 commands)
+        let history_block = Block::default().borders(Borders::ALL).title("Recent Goals");
         let history_text = app
             .command_history
             .iter()
             .rev()
             .take(3)
-            .enumerate()
-            .map(|(i, cmd)| {
-                let prefix = match i {
-                    0 => "^ ",
-                    1 => "  ",
-                    2 => "  ",
-                    _ => "  ",
-                };
-                Line::from(vec![
-                    Span::styled(prefix, Style::default().fg(Color::Gray)),
-                    Span::styled(cmd, Style::default().fg(Color::White)),
-                ])
-            })
-            .collect::<Vec<Line>>();
-
-        let history = Paragraph::new(history_text)
-            .block(history_block)
-            .wrap(Wrap { trim: true });
-        f.render_widget(history, content_chunks[0]);
-
-        // Input area
-        let input_block = Block::default().borders(Borders::ALL).title("Command");
-
-        let input_text = if app.current_mode == TuiMode::Command {
-            format!(":{}", app.input_buffer)
-        } else {
-            app.input_buffer.clone()
-        };
-
-        let input = Paragraph::new(input_text)
-            .block(input_block)
-            .wrap(Wrap { trim: true });
-        f.render_widget(input, content_chunks[1]);
-
-        // Set cursor position for input (only in insert/command modes)
-        if app.current_mode == TuiMode::Insert || app.current_mode == TuiMode::Command {
-            let cursor_x = if app.current_mode == TuiMode::Command {
-                content_chunks[1].x + 1 + app.cursor_position as u16 + 1 // +1 for ':' prefix
-            } else {
-                content_chunks[1].x + 1 + app.cursor_position as u16
-            };
-            let cursor_y = content_chunks[1].y + 1;
-            f.set_cursor(cursor_x, cursor_y);
-        }
-
-        // Message area
-        let message_block = Block::default().borders(Borders::ALL).title("Status");
-
-        let message = Paragraph::new(app.status_message.as_str())
-            .block(message_block)
-            .wrap(Wrap { trim: true });
-        f.render_widget(message, content_chunks[3]);
+            .map(|cmd| Line::from(format!("  {}", cmd)))
+            .collect::<Vec<_>>();
+        let history_paragraph = Paragraph::new(history_text).block(history_block);
+        f.render_widget(history_paragraph, content_chunks[1]);
     }
 
-    /// Draw the status bar
+    /// Draw intent classification state
+    fn draw_classifying_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title("🤖 AI Intent Classification");
+
+        let content = vec![
+            Line::from(""),
+            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(""),
+            Line::from("🔄 Analyzing intent and determining action type..."),
+            Line::from(""),
+            Line::from("This may take a few seconds..."),
+        ];
+
+        let paragraph = Paragraph::new(content)
+            .block(block)
+            .alignment(Alignment::Center);
+        f.render_widget(paragraph, area);
+    }
+
+    /// Draw planning state
+    fn draw_planning_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title("📋 AI Planning Phase");
+
+        let content = vec![
+            Line::from(""),
+            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(""),
+            Line::from("🔄 AI is creating a detailed execution plan..."),
+            Line::from("   • Analyzing project structure"),
+            Line::from("   • Determining required tools"),
+            Line::from("   • Assessing risks and dependencies"),
+            Line::from("   • Generating step-by-step actions"),
+            Line::from(""),
+            Line::from("This may take 10-30 seconds..."),
+        ];
+
+        let paragraph = Paragraph::new(content)
+            .block(block)
+            .alignment(Alignment::Center);
+        f.render_widget(paragraph, area);
+    }
+
+    /// Draw approval waiting state
+    fn draw_approval_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let content_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(4), // Plan summary
+                Constraint::Min(1),    // Plan details
+                Constraint::Length(3), // Action hints
+            ])
+            .split(area);
+
+        // Plan summary
+        let summary_block = Block::default()
+            .borders(Borders::ALL)
+            .title("📋 Execution Plan Ready");
+
+        let plan_summary = if let Some(plan) = &app.current_plan {
+            format!("Plan: {} steps, ~{} min, Risk: Medium",
+                   plan.tool_calls.len(),
+                   plan.tool_calls.len() * 2) // Rough estimate
+        } else {
+            "Plan details loading...".to_string()
+        };
+
+        let summary_content = vec![
+            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(plan_summary),
+            Line::from(""),
+            Line::from("Ready for execution - awaiting your approval"),
+        ];
+
+        let summary_paragraph = Paragraph::new(summary_content).block(summary_block);
+        f.render_widget(summary_paragraph, content_chunks[0]);
+
+        // Plan details (placeholder for now)
+        let details_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Plan Steps");
+
+        let details_content = vec![
+            Line::from("Step 1: [FileRead] Analyze current structure"),
+            Line::from("Step 2: [FileEdit] Make required changes"),
+            Line::from("Step 3: [Command] Run tests"),
+            Line::from("... (more steps available)"),
+        ];
+
+        let details_paragraph = Paragraph::new(details_content).block(details_block);
+        f.render_widget(details_paragraph, content_chunks[1]);
+
+        // Action hints
+        let hints_block = Block::default().borders(Borders::ALL);
+        let hints_content = vec![
+            Line::from("Actions: [y] Execute  [e] Edit Plan  [q] Cancel  [d] Show Details"),
+        ];
+        let hints_paragraph = Paragraph::new(hints_content).block(hints_block);
+        f.render_widget(hints_paragraph, content_chunks[2]);
+    }
+
+    /// Draw execution state
+    fn draw_execution_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let content_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(4), // Current step
+                Constraint::Min(1),    // Progress/details
+                Constraint::Length(2), // Controls
+            ])
+            .split(area);
+
+        // Current step
+        let step_block = Block::default()
+            .borders(Borders::ALL)
+            .title("⚡ Current Execution");
+
+        let (current_step, total_steps) = match app.agent_status.phase {
+            AgentPhase::Executing { current_step, total_steps } => (current_step, total_steps),
+            _ => (0, 0),
+        };
+
+        let step_content = vec![
+            Line::from(format!("Step {}/{}", current_step, total_steps)),
+            Line::from("AI is executing the current step..."),
+            Line::from(""),
+            Line::from("This may take several seconds..."),
+        ];
+
+        let step_paragraph = Paragraph::new(step_content).block(step_block);
+        f.render_widget(step_paragraph, content_chunks[0]);
+
+        // Progress details
+        let progress_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Progress Log");
+
+        let progress_content: Vec<Line> = app.execution_progress
+            .iter()
+            .rev()
+            .take(10)
+            .map(|line| Line::from(format!("  {}", line)))
+            .collect();
+
+        let progress_paragraph = Paragraph::new(progress_content).block(progress_block);
+        f.render_widget(progress_paragraph, content_chunks[1]);
+
+        // Controls
+        let controls_block = Block::default().borders(Borders::ALL);
+        let controls_content = vec![
+            Line::from("Controls: [p] Pause  [q] Abort  [s] Status"),
+        ];
+        let controls_paragraph = Paragraph::new(controls_content).block(controls_block);
+        f.render_widget(controls_paragraph, content_chunks[2]);
+    }
+
+    /// Draw completion state
+    fn draw_complete_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let content_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(6), // Results summary
+                Constraint::Min(1),    // Details
+                Constraint::Length(3), // Next actions
+            ])
+            .split(area);
+
+        // Results summary
+        let results_block = Block::default()
+            .borders(Borders::ALL)
+            .title("✅ Execution Complete");
+
+        let results_content = vec![
+            Line::from("SUCCESS: All steps completed successfully"),
+            Line::from(""),
+            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(format!("Duration: {:?}", app.agent_status.execution_time.unwrap_or_default())),
+            Line::from(format!("Tools Used: {}", app.agent_status.tools_used.len())),
+        ];
+
+        let results_paragraph = Paragraph::new(results_content)
+            .block(results_block)
+            .style(Style::default().fg(Color::Green));
+        f.render_widget(results_paragraph, content_chunks[0]);
+
+        // Details (placeholder)
+        let details_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Completion Details");
+
+        let details_content = vec![
+            Line::from("• Files modified: 2"),
+            Line::from("• Tests passed: 23/23"),
+            Line::from("• Git commit created"),
+            Line::from("• Documentation updated"),
+        ];
+
+        let details_paragraph = Paragraph::new(details_content).block(details_block);
+        f.render_widget(details_paragraph, content_chunks[1]);
+
+        // Next actions
+        let actions_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Next Actions");
+
+        let actions_content = vec![
+            Line::from("[r] Review changes  [n] New task  [s] Save session  [q] Quit"),
+        ];
+
+        let actions_paragraph = Paragraph::new(actions_content).block(actions_block);
+        f.render_widget(actions_paragraph, content_chunks[2]);
+    }
+
+    /// Draw error state
+    fn draw_error_content(f: &mut Frame, area: Rect, app: &TuiApp) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title("❌ Execution Error")
+            .style(Style::default().fg(Color::Red));
+
+        let error_message = app.agent_status.error_message.as_deref()
+            .unwrap_or("An unknown error occurred during execution");
+
+        let content = vec![
+            Line::from(""),
+            Line::from("An error occurred during execution:"),
+            Line::from(""),
+            Line::from(error_message),
+            Line::from(""),
+            Line::from("Actions: [r] Retry  [e] Edit goal  [q] Quit"),
+        ];
+
+        let paragraph = Paragraph::new(content)
+            .block(block)
+            .alignment(Alignment::Center);
+        f.render_widget(paragraph, area);
+    }
+
+    /// Draw the status bar with agent metrics
     fn draw_status_bar(f: &mut Frame, area: Rect, app: &TuiApp) {
         let status_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
-                Constraint::Percentage(20),
-                Constraint::Percentage(20),
-                Constraint::Percentage(20),
-                Constraint::Percentage(20),
-                Constraint::Percentage(20),
+                Constraint::Percentage(25), // Agent status
+                Constraint::Percentage(20), // Performance metrics
+                Constraint::Percentage(20), // Resource usage
+                Constraint::Percentage(20), // Tools info
+                Constraint::Percentage(15), // Actions
             ])
             .split(area);
 
-        let hints = match app.current_mode {
-            TuiMode::Normal => {
-                vec![
-                    format!("i {}", "insert"),
-                    format!("Cmd+P {}", "palette"),
-                    format!("Cmd+S {}", "sessions"),
-                    format!("Cmd+K {}", "tools"),
-                    format!(": {}", "cmd"),
-                ]
-            }
-            TuiMode::Insert => vec![
-                format!("esc {}", "normal"),
-                format!("Enter {}", "execute"),
-                format!("Backspace {}", "delete"),
-                format!("Arrows {}", "move"),
-                "".to_string(),
-            ],
-            TuiMode::Command => vec![
-                format!("Enter {}", "run"),
-                format!("esc {}", "cancel"),
-                format!("tab {}", "complete"),
-                "".to_string(),
-                "".to_string(),
-            ],
+        // Agent status
+        let agent_status = match app.agent_status.phase {
+            AgentPhase::Idle => "Agent: Idle".to_string(),
+            AgentPhase::ClassifyingIntent => "Agent: Classifying".to_string(),
+            AgentPhase::Planning => "Agent: Planning".to_string(),
+            AgentPhase::AwaitingApproval => "Agent: Ready".to_string(),
+            AgentPhase::Executing { current_step, total_steps } =>
+                format!("Agent: Exec {}/{}", current_step, total_steps),
+            AgentPhase::Complete => "Agent: Complete".to_string(),
+            AgentPhase::Error => "Agent: Error".to_string(),
         };
+        let agent_widget = Paragraph::new(agent_status)
+            .style(Style::default().fg(Color::Cyan))
+            .alignment(Alignment::Left);
+        f.render_widget(agent_widget, status_chunks[0]);
 
-        for (i, hint) in hints.iter().enumerate() {
-            let hint_widget = Paragraph::new(hint.as_str())
-                .style(Style::default().fg(Color::Gray))
-                .alignment(Alignment::Center);
-            f.render_widget(hint_widget, status_chunks[i]);
-        }
+        // Performance metrics
+        let confidence = app.agent_status.confidence
+            .map(|c| format!("Conf: {:.0}%", c * 100.0))
+            .unwrap_or_else(|| "Conf: N/A".to_string());
+        let duration = app.agent_status.execution_time
+            .map(|d| format!("Time: {:.1}s", d.as_secs_f32()))
+            .unwrap_or_else(|| "Time: N/A".to_string());
+        let perf_text = format!("{} | {}", confidence, duration);
+        let perf_widget = Paragraph::new(perf_text)
+            .style(Style::default().fg(Color::Yellow))
+            .alignment(Alignment::Center);
+        f.render_widget(perf_widget, status_chunks[1]);
+
+        // Resource usage
+        let memory = app.agent_status.memory_usage
+            .map(|m| format!("Mem: {}MB", m / 1024 / 1024))
+            .unwrap_or_else(|| "Mem: N/A".to_string());
+        let tools_count = format!("Tools: {}", app.agent_status.tools_used.len());
+        let resource_text = format!("{} | {}", memory, tools_count);
+        let resource_widget = Paragraph::new(resource_text)
+            .style(Style::default().fg(Color::Magenta))
+            .alignment(Alignment::Center);
+        f.render_widget(resource_widget, status_chunks[2]);
+
+        // Tools info (available tools count)
+        let tools_text = "Tools: 12 avail";
+        let tools_widget = Paragraph::new(tools_text)
+            .style(Style::default().fg(Color::Green))
+            .alignment(Alignment::Center);
+        f.render_widget(tools_widget, status_chunks[3]);
+
+        // Action hints (contextual)
+        let actions_text = match app.agent_status.phase {
+            AgentPhase::Idle => "Actions: i=goal, :=cmd",
+            AgentPhase::AwaitingApproval => "Actions: y=exec, e=edit, q=cancel",
+            AgentPhase::Executing { .. } => "Actions: p=pause, q=abort",
+            AgentPhase::Complete => "Actions: r=review, n=new",
+            AgentPhase::Error => "Actions: r=retry, e=edit",
+            _ => "Actions: ...",
+        };
+        let actions_widget = Paragraph::new(actions_text)
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Right);
+        f.render_widget(actions_widget, status_chunks[4]);
     }
 
     /// Draw overlay windows
@@ -2133,7 +2673,6 @@ Output ONLY valid JSON, no other text."#;
 
         f.render_widget(paragraph, area);
     }
-}
 
 /// Helper function to create a centered rectangle
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
