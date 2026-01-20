@@ -1,687 +1,300 @@
-# Bro: HTTP API Reference
+# Bro: Security & Privacy Model
 
-This document describes the REST API endpoints provided by bro for programmatic access and integration.
+This document outlines the security and privacy measures implemented in bro to ensure safe, private voice-powered AI assistance.
 
-## Base URL
+## 🔒 Core Security Principles
 
-```
-http://localhost:8080/api
-```
+### 1. Local Processing First
+- **Zero Cloud Dependency**: All voice recognition, AI inference, and processing happens locally
+- **No Data Transmission**: Audio, code, and personal data never leave your device
+- **Offline Operation**: Works without internet connection for core functionality
 
-## Authentication
+### 2. Defense in Depth
+- **Multiple Security Layers**: Sandboxing, validation, confirmation, and monitoring
+- **Fail-Safe Design**: System fails securely when components malfunction
+- **Principle of Least Privilege**: Components have minimal required permissions
 
-Currently, bro runs locally and doesn't require authentication. All endpoints are accessible on the local machine.
+### 3. Privacy by Design
+- **Data Minimization**: Only process what's necessary for functionality
+- **Purpose Limitation**: Data used only for intended voice assistance
+- **Storage Limitation**: No persistent storage of sensitive audio data
 
-## Response Format
+## 🛡️ Security Architecture
 
-All API responses follow this structure:
+### Voice Processing Security
 
-```json
-{
-  "success": true,
-  "data": { ... },
-  "error": null,
-  "timestamp": "2024-01-20T10:30:00Z"
+#### Audio Data Handling
+```rust
+// Audio samples are processed in memory only
+pub struct AudioSample {
+    data: Vec<i16>,        // Raw PCM data
+    sample_rate: u32,      // 16kHz for voice
+    channels: u16,         // Mono for recognition
 }
-```
 
-Error responses:
-
-```json
-{
-  "success": false,
-  "data": null,
-  "error": {
-    "code": "VOICE_RECOGNITION_FAILED",
-    "message": "Failed to recognize speech",
-    "details": { ... }
-  },
-  "timestamp": "2024-01-20T10:30:00Z"
-}
-```
-
-## Voice API
-
-### POST /api/voice/command
-
-Process a voice command directly.
-
-**Request:**
-```json
-{
-  "text": "generate a rust hello world function",
-  "confidence": 0.95,
-  "language": "en-US"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "command_id": "cmd_123456",
-    "intent": "code_generation",
-    "response": {
-      "type": "code",
-      "language": "rust",
-      "content": "fn main() {\n    println!(\"Hello, World!\");\n}",
-      "explanation": "Generated a simple Rust hello world function"
-    },
-    "execution_time_ms": 1250
-  }
-}
-```
-
-### GET /api/voice/status
-
-Get current voice recognition status.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "is_listening": true,
-    "wake_word_active": true,
-    "current_session": "session_789",
-    "last_command": {
-      "text": "check compilation errors",
-      "timestamp": "2024-01-20T10:29:45Z",
-      "status": "completed"
+impl Drop for AudioSample {
+    fn drop(&mut self) {
+        // Secure zero out audio data
+        self.data.iter_mut().for_each(|x| *x = 0);
     }
-  }
 }
 ```
 
-### POST /api/voice/wake
+#### Wake Word Protection
+- **Continuous Monitoring**: Background process with minimal CPU usage
+- **False Positive Prevention**: Multi-factor wake word validation
+- **Timeout Mechanisms**: Automatic deactivation after periods of inactivity
 
-Manually trigger wake word activation.
+#### Speech Recognition Security
+- **Local Models Only**: No cloud-based speech recognition services
+- **Model Validation**: Cryptographic verification of model files
+- **Input Sanitization**: Remove potentially harmful text from recognition results
 
-**Request:**
-```json
-{
-  "source": "api",
-  "duration_ms": 5000
+### AI Processing Security
+
+#### Prompt Engineering Safety
+```rust
+pub struct PromptValidator {
+    dangerous_patterns: Vec<Regex>,
+    context_limits: ContextLimits,
 }
-```
 
-### WebSocket /api/voice/stream
-
-Real-time voice command streaming.
-
-**Connection:**
-```javascript
-const ws = new WebSocket('ws://localhost:8080/api/voice/stream');
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.type === 'recognition_result') {
-    console.log('Recognized:', data.text);
-  }
-};
-```
-
-**Messages:**
-```json
-{
-  "type": "recognition_result",
-  "text": "generate fibonacci function",
-  "confidence": 0.92,
-  "is_final": true
-}
-```
-
-## AI Assistant API
-
-### POST /api/ai/generate
-
-Generate code or text using AI.
-
-**Request:**
-```json
-{
-  "prompt": "create a python function to calculate factorial",
-  "type": "code",
-  "language": "python",
-  "context": {
-    "project_type": "web_app",
-    "framework": "flask"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "content": "def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n - 1)",
-    "language": "python",
-    "confidence": 0.89,
-    "tokens_used": 156,
-    "generation_time_ms": 850
-  }
-}
-```
-
-### POST /api/ai/chat
-
-Interactive chat with AI assistant.
-
-**Request:**
-```json
-{
-  "message": "explain rust ownership",
-  "conversation_id": "conv_123",
-  "include_context": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "response": "Rust ownership is a system that ensures memory safety...",
-    "conversation_id": "conv_123",
-    "sources": [
-      {
-        "file": "src/main.rs",
-        "line": 42,
-        "relevance": 0.95
-      }
-    ]
-  }
-}
-```
-
-### POST /api/ai/analyze
-
-Analyze code for issues or improvements.
-
-**Request:**
-```json
-{
-  "code": "fn main() { println!(\"Hello\"); }",
-  "language": "rust",
-  "analysis_type": "all"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "issues": [
-      {
-        "type": "style",
-        "severity": "warning",
-        "message": "Missing main function documentation",
-        "line": 1,
-        "suggestion": "Add /// documentation comment"
-      }
-    ],
-    "metrics": {
-      "complexity": 1,
-      "maintainability": 85,
-      "test_coverage": 0
-    }
-  }
-}
-```
-
-## Command Execution API
-
-### POST /api/commands/execute
-
-Execute a shell command with safety checks.
-
-**Request:**
-```json
-{
-  "command": "cargo check",
-  "working_directory": "/home/user/project",
-  "timeout_seconds": 30,
-  "require_confirmation": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "command_id": "exec_456",
-    "stdout": "Checking project...\nAll checks passed!",
-    "stderr": "",
-    "exit_code": 0,
-    "execution_time_ms": 2450,
-    "confirmed": true
-  }
-}
-```
-
-### GET /api/commands/history
-
-Get command execution history.
-
-**Query Parameters:**
-- `limit` (optional): Number of commands to return (default: 50)
-- `offset` (optional): Pagination offset (default: 0)
-- `status` (optional): Filter by status (pending, running, completed, failed)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "commands": [
-      {
-        "id": "exec_456",
-        "command": "cargo check",
-        "status": "completed",
-        "exit_code": 0,
-        "timestamp": "2024-01-20T10:30:00Z",
-        "duration_ms": 2450
-      }
-    ],
-    "total": 150,
-    "limit": 50,
-    "offset": 0
-  }
-}
-```
-
-### POST /api/commands/cancel
-
-Cancel a running command.
-
-**Request:**
-```json
-{
-  "command_id": "exec_456"
-}
-```
-
-## File System API
-
-### GET /api/files/list
-
-List files in a directory.
-
-**Query Parameters:**
-- `path`: Directory path
-- `recursive` (optional): Include subdirectories (default: false)
-- `include_hidden` (optional): Include hidden files (default: false)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "path": "/home/user/project",
-    "files": [
-      {
-        "name": "Cargo.toml",
-        "type": "file",
-        "size": 1024,
-        "modified": "2024-01-20T09:00:00Z",
-        "permissions": "644"
-      },
-      {
-        "name": "src",
-        "type": "directory",
-        "size": 4096,
-        "modified": "2024-01-20T10:00:00Z",
-        "permissions": "755"
-      }
-    ]
-  }
-}
-```
-
-### GET /api/files/read
-
-Read file contents.
-
-**Query Parameters:**
-- `path`: File path
-- `encoding` (optional): Text encoding (default: utf-8)
-- `max_lines` (optional): Maximum lines to return
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "path": "/home/user/project/src/main.rs",
-    "content": "fn main() {\n    println!(\"Hello, World!\");\n}",
-    "encoding": "utf-8",
-    "size": 45,
-    "modified": "2024-01-20T10:00:00Z"
-  }
-}
-```
-
-### POST /api/files/write
-
-Write content to a file.
-
-**Request:**
-```json
-{
-  "path": "/home/user/project/src/main.rs",
-  "content": "fn main() {\n    println!(\"Hello, World!\");\n}",
-  "encoding": "utf-8",
-  "create_directories": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "path": "/home/user/project/src/main.rs",
-    "size": 45,
-    "modified": "2024-01-20T10:30:00Z"
-  }
-}
-```
-
-## Project Analysis API
-
-### GET /api/project/analyze
-
-Analyze project structure and dependencies.
-
-**Query Parameters:**
-- `path` (optional): Project root path (default: current directory)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "language": "rust",
-    "framework": "axum",
-    "dependencies": [
-      { "name": "tokio", "version": "1.0", "type": "runtime" },
-      { "name": "serde", "version": "1.0", "type": "serialization" }
-    ],
-    "structure": {
-      "src/": {
-        "main.rs": { "type": "entry_point", "lines": 150 },
-        "lib.rs": { "type": "library", "lines": 200 }
-      }
-    },
-    "metrics": {
-      "total_files": 15,
-      "total_lines": 2500,
-      "test_coverage": 85
-    }
-  }
-}
-```
-
-### GET /api/project/search
-
-Search codebase using RAG.
-
-**Query Parameters:**
-- `query`: Search query
-- `type` (optional): Search type (code, docs, all)
-- `limit` (optional): Max results (default: 10)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "query": "authentication middleware",
-    "results": [
-      {
-        "file": "src/middleware/auth.rs",
-        "line": 15,
-        "content": "pub struct AuthMiddleware {\n    jwt_secret: String,\n}",
-        "relevance": 0.95,
-        "context": "JWT authentication middleware implementation"
-      }
-    ],
-    "total_results": 5
-  }
-}
-```
-
-## System API
-
-### GET /api/system/status
-
-Get system status and resource usage.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "version": "1.0.0",
-    "uptime_seconds": 3600,
-    "memory": {
-      "used_mb": 245,
-      "total_mb": 8192,
-      "percentage": 3
-    },
-    "cpu": {
-      "usage_percentage": 5.2,
-      "cores": 8
-    },
-    "disk": {
-      "used_gb": 45,
-      "total_gb": 256,
-      "percentage": 18
-    },
-    "services": {
-      "voice_recognition": "active",
-      "ai_assistant": "active",
-      "web_interface": "active"
-    }
-  }
-}
-```
-
-### GET /api/system/health
-
-Health check endpoint.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "status": "healthy",
-    "checks": {
-      "voice_service": { "status": "pass", "response_time_ms": 5 },
-      "ai_service": { "status": "pass", "response_time_ms": 50 },
-      "file_system": { "status": "pass", "response_time_ms": 2 },
-      "database": { "status": "pass", "response_time_ms": 10 }
-    }
-  }
-}
-```
-
-### POST /api/system/restart
-
-Restart bro services.
-
-**Request:**
-```json
-{
-  "services": ["voice", "ai", "web"],
-  "reason": "configuration_update"
-}
-```
-
-### GET /api/system/logs
-
-Get application logs.
-
-**Query Parameters:**
-- `level` (optional): Log level filter (debug, info, warn, error)
-- `since` (optional): ISO 8601 timestamp
-- `limit` (optional): Max log entries (default: 100)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "logs": [
-      {
-        "timestamp": "2024-01-20T10:30:00Z",
-        "level": "info",
-        "message": "Voice command processed successfully",
-        "service": "voice_processor",
-        "metadata": {
-          "command_id": "cmd_123",
-          "confidence": 0.92
+impl PromptValidator {
+    pub fn validate(&self, prompt: &str) -> Result<()> {
+        // Check for prompt injection attempts
+        for pattern in &self.dangerous_patterns {
+            if pattern.is_match(prompt) {
+                return Err(SecurityError::PromptInjection);
+            }
         }
-      }
-    ]
-  }
+
+        // Validate prompt length and complexity
+        if prompt.len() > self.context_limits.max_prompt_length {
+            return Err(SecurityError::PromptTooLong);
+        }
+
+        Ok(())
+    }
 }
 ```
 
-## Configuration API
+#### Code Generation Validation
+- **Syntax Checking**: Generated code must compile/parse correctly
+- **Security Analysis**: Scan for potentially harmful code patterns
+- **Context Awareness**: Code generation respects project conventions and security policies
 
-### GET /api/config
+#### Model Isolation
+- **Sandbox Execution**: AI models run in isolated processes
+- **Resource Limits**: CPU, memory, and execution time constraints
+- **Crash Protection**: Model failures don't compromise system stability
 
-Get current configuration.
+### Command Execution Security
 
-**Response:**
+#### Sandbox Architecture
+```rust
+pub struct CommandSandbox {
+    allowed_commands: HashSet<String>,
+    dangerous_patterns: Vec<Regex>,
+    resource_limits: ResourceLimits,
+}
+
+impl CommandSandbox {
+    pub async fn execute(&self, command: &str) -> Result<CommandOutput> {
+        // Pre-execution validation
+        self.validate_command(command)?;
+
+        // Create restricted environment
+        let env = self.create_sandbox_environment()?;
+
+        // Execute with limits
+        let output = self.execute_restricted(command, env).await?;
+
+        // Post-execution analysis
+        self.analyze_output(&output)?;
+
+        Ok(output)
+    }
+}
+```
+
+#### Dangerous Command Detection
+**Blocked Patterns:**
+- System file modifications (`/etc/*`, `/boot/*`, `/sys/*`)
+- Device access (`/dev/mem`, `/dev/kmem`)
+- Network configuration changes
+- User management operations
+- Kernel module operations
+
+**Allowed Patterns (with restrictions):**
+- Development tools (`cargo`, `git`, `npm`, `docker`)
+- File operations in user directories
+- System monitoring (`ps`, `top`, `df`, `free`)
+- Network requests to safe domains
+
+#### Resource Protection
+- **CPU Limits**: Maximum 50% CPU usage per command
+- **Memory Limits**: 512MB per command execution
+- **Time Limits**: 30-second timeout for commands
+- **Process Limits**: Maximum 10 child processes
+
+### File System Security
+
+#### Path Validation
+```rust
+pub struct PathValidator {
+    allowed_roots: Vec<PathBuf>,
+    blocked_patterns: Vec<Regex>,
+}
+
+impl PathValidator {
+    pub fn validate(&self, path: &Path) -> Result<()> {
+        // Check against allowed root directories
+        let canonical_path = path.canonicalize()?;
+        let is_allowed = self.allowed_roots.iter().any(|root| {
+            canonical_path.starts_with(root)
+        });
+
+        if !is_allowed {
+            return Err(SecurityError::PathNotAllowed);
+        }
+
+        // Check for blocked patterns
+        let path_str = canonical_path.to_string_lossy();
+        for pattern in &self.blocked_patterns {
+            if pattern.is_match(&path_str) {
+                return Err(SecurityError::DangerousPath);
+            }
+        }
+
+        Ok(())
+    }
+}
+```
+
+#### Secrets Detection
+- **Pattern Matching**: Identify API keys, passwords, tokens
+- **Entropy Analysis**: Detect high-entropy strings likely to be secrets
+- **Content Classification**: Avoid processing sensitive file types
+- **Leak Prevention**: Block commands that might expose secrets
+
+### Network Security
+
+#### Outbound Connection Control
+- **Domain Whitelisting**: Only allow connections to trusted domains
+- **Protocol Restrictions**: HTTPS-only for external connections
+- **Certificate Validation**: Strict TLS certificate verification
+- **Request Limiting**: Rate limiting for external API calls
+
+#### WebRTC Security
+- **DTLS Encryption**: All WebRTC connections are encrypted
+- **Origin Validation**: WebRTC offers only accepted from allowed origins
+- **Session Limits**: Time-limited WebRTC sessions with automatic cleanup
+- **Screen Content Filtering**: Avoid streaming sensitive content
+
+### Authentication & Access Control
+
+#### Local-Only Access
+- **No Authentication**: Runs locally with no login required
+- **Network Isolation**: Only accessible from localhost
+- **Port Restrictions**: Configurable listening ports with validation
+
+#### API Access Control
+- **Request Validation**: All API inputs validated and sanitized
+- **Rate Limiting**: Prevent abuse with configurable limits
+- **Audit Logging**: All API calls logged for security review
+
+### Privacy Protections
+
+#### Data Handling
+- **No Persistent Audio Storage**: Voice recordings processed in memory only
+- **Temporary File Cleanup**: Any temporary files automatically removed
+- **Memory Zeroing**: Sensitive data overwritten before memory deallocation
+
+#### Usage Analytics
+- **Opt-in Only**: No automatic data collection
+- **Local Storage**: Any analytics stored locally only
+- **Minimal Data**: Only technical metrics, no personal information
+
+### Security Monitoring
+
+#### Real-time Monitoring
+```rust
+pub struct SecurityMonitor {
+    anomaly_detector: AnomalyDetector,
+    alert_system: AlertSystem,
+}
+
+impl SecurityMonitor {
+    pub async fn monitor_command(&self, command: &CommandExecution) {
+        // Detect unusual patterns
+        if self.anomaly_detector.is_anomalous(command) {
+            self.alert_system.alert(SecurityAlert::UnusualCommand {
+                command: command.to_string(),
+                user: command.user,
+                timestamp: Utc::now(),
+            });
+        }
+    }
+}
+```
+
+#### Incident Response
+- **Automatic Mitigation**: Suspicious activities trigger automatic responses
+- **Alert System**: Security events logged and optionally alerted
+- **Forensic Logging**: Detailed logs for incident investigation
+- **Recovery Procedures**: Automated system recovery from security events
+
+### Compliance Considerations
+
+#### Data Protection
+- **GDPR Compliance**: Local processing avoids data transfer requirements
+- **Privacy by Design**: Security built into system architecture
+- **Data Minimization**: Only necessary data processed
+
+#### Security Standards
+- **Defense in Depth**: Multiple security layers prevent single-point failures
+- **Least Privilege**: Components have minimal required permissions
+- **Fail-Safe Defaults**: System fails securely when components fail
+
+### Security Configuration
+
+#### Default Security Settings
 ```json
 {
-  "success": true,
-  "data": {
-    "voice": {
-      "wake_word": "bro",
-      "model_path": "model/vosk-model-en-us",
-      "sample_rate": 16000,
-      "sensitivity": 0.8
-    },
-    "ai": {
-      "provider": "ollama",
-      "model": "qwen2.5:3b",
-      "temperature": 0.7,
-      "max_tokens": 2048
-    },
-    "web": {
-      "port": 8080,
-      "host": "127.0.0.1",
-      "cors_origins": ["http://localhost:3000"]
-    },
-    "security": {
-      "sandbox_enabled": true,
-      "confirmation_required": true,
-      "secrets_detection": true
+  "security": {
+    "sandbox_enabled": true,
+    "confirmation_required": true,
+    "secrets_detection": true,
+    "path_validation": true,
+    "network_restrictions": true,
+    "resource_limits": {
+      "max_cpu_percent": 50,
+      "max_memory_mb": 512,
+      "max_execution_time_sec": 30
     }
   }
 }
 ```
 
-### POST /api/config/update
+#### Customization Options
+- **Security Levels**: Relaxed, Standard, Strict, Paranoid
+- **Custom Allow Lists**: Organization-specific allowed commands
+- **Integration Hooks**: External security system integration
+- **Audit Levels**: Configurable logging verbosity
 
-Update configuration (requires restart).
+### Testing & Validation
 
-**Request:**
-```json
-{
-  "voice": {
-    "wake_word": "computer"
-  },
-  "ai": {
-    "temperature": 0.5
-  }
-}
-```
+#### Security Testing
+- **Penetration Testing**: Regular security assessments
+- **Fuzz Testing**: Random input testing for vulnerabilities
+- **Static Analysis**: Code analysis for security flaws
+- **Dependency Scanning**: Third-party library security checks
 
-## WebRTC API
+#### Continuous Security
+- **Automated Scans**: Regular vulnerability scanning
+- **Dependency Updates**: Automated security patch application
+- **Security Monitoring**: Real-time threat detection
+- **Incident Response**: Documented procedures for security events
 
-### POST /api/webrtc/offer
-
-Initiate WebRTC connection for screen streaming.
-
-**Request:**
-```json
-{
-  "client_type": "mobile",
-  "capabilities": {
-    "audio": true,
-    "video": true,
-    "data_channel": true
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "session_id": "webrtc_789",
-    "offer": {
-      "type": "offer",
-      "sdp": "v=0\r\no=- ..."
-    },
-    "ice_servers": [
-      { "urls": "stun:stun.l.google.com:19302" }
-    ]
-  }
-}
-```
-
-### POST /api/webrtc/answer
-
-Complete WebRTC handshake.
-
-**Request:**
-```json
-{
-  "session_id": "webrtc_789",
-  "answer": {
-    "type": "answer",
-    "sdp": "..."
-  }
-}
-```
-
-## Error Codes
-
-| Code | Description |
-|------|-------------|
-| VOICE_RECOGNITION_FAILED | Speech recognition failed |
-| AI_SERVICE_UNAVAILABLE | AI model not responding |
-| COMMAND_EXECUTION_FAILED | Shell command failed |
-| FILE_NOT_FOUND | Requested file doesn't exist |
-| PERMISSION_DENIED | Insufficient permissions |
-| SECURITY_VIOLATION | Command violates security policy |
-| INVALID_REQUEST | Malformed request data |
-| SERVICE_OVERLOADED | Too many concurrent requests |
-
-## Rate Limits
-
-- Voice commands: 10 per minute
-- AI generation: 20 per minute
-- File operations: 100 per minute
-- System queries: Unlimited
-
-Rate limit headers are included in responses:
-```
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 9
-X-RateLimit-Reset: 1642684800
-```
-
-This API provides comprehensive programmatic access to bro's voice-powered AI capabilities, enabling integration with other tools and automation workflows.</content>
-<parameter name="filePath">/home/rendi/projects/bro/docs/api.md
+This comprehensive security model ensures that bro provides powerful voice-powered AI assistance while maintaining the highest standards of security and privacy protection.</content>
+<parameter name="filePath">/home/rendi/projects/bro/docs/security.md

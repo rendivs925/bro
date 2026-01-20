@@ -1,300 +1,378 @@
-# Bro: Security & Privacy Model
+# Bro: Voice-Powered AI CLI - Example Use Cases
 
-This document outlines the security and privacy measures implemented in bro to ensure safe, private voice-powered AI assistance.
+This document provides practical, real-world scenarios demonstrating how "bro" enables hands-free coding and system administration from anywhere.
 
-## 🔒 Core Security Principles
+## Core Concept
 
-### 1. Local Processing First
-- **Zero Cloud Dependency**: All voice recognition, AI inference, and processing happens locally
-- **No Data Transmission**: Audio, code, and personal data never leave your device
-- **Offline Operation**: Works without internet connection for core functionality
+"bro" combines voice recognition, AI assistance, and mobile screen streaming to let you work without being at your desk. Say "bro ..." to activate voice commands that control your AI coding assistant while viewing your desktop on mobile.
 
-### 2. Defense in Depth
-- **Multiple Security Layers**: Sandboxing, validation, confirmation, and monitoring
-- **Fail-Safe Design**: System fails securely when components malfunction
-- **Principle of Least Privilege**: Components have minimal required permissions
+## Use Case Categories
 
-### 3. Privacy by Design
-- **Data Minimization**: Only process what's necessary for functionality
-- **Purpose Limitation**: Data used only for intended voice assistance
-- **Storage Limitation**: No persistent storage of sensitive audio data
+### 1. Development Workflows 🛠️
 
-## 🛡️ Security Architecture
+#### Voice-to-Code Generation
+**Scenario**: You're fishing and need to implement a new API endpoint.
 
-### Voice Processing Security
+**Voice Command**:
+```
+You: "bro create a rust function to validate user email addresses"
+```
 
-#### Audio Data Handling
+**AI Response** (appears on desktop):
 ```rust
-// Audio samples are processed in memory only
-pub struct AudioSample {
-    data: Vec<i16>,        // Raw PCM data
-    sample_rate: u32,      // 16kHz for voice
-    channels: u16,         // Mono for recognition
+use regex::Regex;
+use once_cell::sync::Lazy;
+
+static EMAIL_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap()
+});
+
+pub fn validate_email(email: &str) -> bool {
+    EMAIL_REGEX.is_match(email)
 }
 
-impl Drop for AudioSample {
-    fn drop(&mut self) {
-        // Secure zero out audio data
-        self.data.iter_mut().for_each(|x| *x = 0);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_emails() {
+        assert!(validate_email("user@example.com"));
+        assert!(validate_email("test.email+tag@domain.co.uk"));
+    }
+
+    #[test]
+    fn test_invalid_emails() {
+        assert!(!validate_email("invalid"));
+        assert!(!validate_email("@domain.com"));
+        assert!(!validate_email("user@"));
     }
 }
 ```
 
-#### Wake Word Protection
-- **Continuous Monitoring**: Background process with minimal CPU usage
-- **False Positive Prevention**: Multi-factor wake word validation
-- **Timeout Mechanisms**: Automatic deactivation after periods of inactivity
+**Mobile Control**: Touch screen to position cursor, say "bro insert this code" to paste into your editor.
 
-#### Speech Recognition Security
-- **Local Models Only**: No cloud-based speech recognition services
-- **Model Validation**: Cryptographic verification of model files
-- **Input Sanitization**: Remove potentially harmful text from recognition results
+#### Debugging on the Go
+**Scenario**: At the gym, checking compilation errors while running.
 
-### AI Processing Security
+**Voice Commands**:
+```
+You: "bro check for rust compilation errors"
+Bro: "Found 2 errors in src/auth.rs:
+      Line 42: expected `&str`, found `String`
+      Line 58: unused variable `user_id`"
 
-#### Prompt Engineering Safety
+You: "bro fix the type error on line 42"
+Bro: [analyzes code, generates fix]
+     "Changed `user_id: String` to `user_id: &str` in function signature"
+```
+
+#### Codebase Exploration
+**Scenario**: Walking in park, researching how authentication works.
+
+**Voice Query**:
+```
+You: "bro explain how the jwt authentication works in this codebase"
+```
+
+**RAG-Powered Response**:
+```
+JWT authentication in your project:
+
+1. **Token Generation** (`src/auth/jwt.rs:45`):
+   - Uses HS256 algorithm with 256-bit secret
+   - Includes user_id, roles, and expiration
+   - Expires after 24 hours
+
+2. **Middleware Validation** (`src/middleware/auth.rs:23`):
+   - Extracts Bearer token from Authorization header
+   - Validates signature against server secret
+   - Decodes claims into request extensions
+
+3. **Route Protection** (`src/routes/protected.rs:12`):
+   - Checks for valid JWT in request
+   - Validates user permissions
+   - Returns 401 if authentication fails
+
+Key files: auth/jwt.rs, middleware/auth.rs, routes/protected.rs
+```
+
+### 2. System Administration 📊
+
+#### Server Monitoring
+**Scenario**: Cooking dinner, monitoring server health.
+
+**Voice Commands**:
+```
+You: "bro check server status and resource usage"
+Bro: "Server Status:
+      - Load Average: 1.2 (4 cores)
+      - Memory: 3.2GB used / 8GB total (40%)
+      - Disk: 25GB free / 100GB total
+      - Services: nginx ✓, postgres ✓, redis ✓"
+
+You: "bro restart nginx if it's not responding"
+Bro: [checks service status]
+     "nginx is running and responding. No restart needed."
+```
+
+#### Log Analysis
+**Scenario**: Morning coffee, reviewing overnight errors.
+
+**Voice Analysis**:
+```
+You: "bro analyze error logs from last 24 hours"
+Bro: "Log Analysis Summary:
+      - Total errors: 12
+      - Most common: Database connection timeouts (8)
+      - Authentication failures: 3
+      - Recommendations:
+        1. Increase database connection pool size
+        2. Review authentication retry logic"
+```
+
+### 3. Multi-Step Task Planning 📋
+
+#### Feature Implementation
+**Scenario**: Planning user registration feature while commuting.
+
+**Voice Planning**:
+```
+You: "bro agent implement user registration with email verification"
+```
+
+**AI Planning Response**:
+```
+Multi-step implementation plan for user registration:
+
+Phase 1: Database & Models
+1. Create User model with email, password_hash, verification_token
+2. Add database migration for users table
+3. Implement password hashing with bcrypt
+
+Phase 2: Registration API
+4. Create POST /api/register endpoint
+5. Add input validation (email format, password strength)
+6. Generate verification token and send email
+
+Phase 3: Email Verification
+7. Create POST /api/verify endpoint
+8. Update user status on successful verification
+9. Handle token expiration and resend logic
+
+Phase 4: Frontend Integration
+10. Update registration form with validation
+11. Add email verification UI
+12. Implement success/error feedback
+
+Estimated time: 4-6 hours
+Dependencies: lettre (email), bcrypt (passwords)
+```
+
+**Step Execution**:
+```
+You: "bro execute phase 1 step 1"
+Bro: "Creating User model...
+      - Added src/models/user.rs
+      - Added verification_token, email_verified fields
+      - Generated database migration"
+```
+
+### 4. Learning & Documentation 📚
+
+#### Code Explanation
+**Scenario**: Learning new framework concepts while traveling.
+
+**Voice Learning**:
+```
+You: "bro explain rust error handling patterns with examples"
+```
+
+**Contextual Response**:
+```
+Rust Error Handling Patterns:
+
+1. **Result<T, E> for recoverable errors**:
 ```rust
-pub struct PromptValidator {
-    dangerous_patterns: Vec<Regex>,
-    context_limits: ContextLimits,
+fn read_file(path: &str) -> Result<String, std::io::Error> {
+    std::fs::read_to_string(path)
 }
+```
 
-impl PromptValidator {
-    pub fn validate(&self, prompt: &str) -> Result<()> {
-        // Check for prompt injection attempts
-        for pattern in &self.dangerous_patterns {
-            if pattern.is_match(prompt) {
-                return Err(SecurityError::PromptInjection);
+2. **Option<T> for absence**:
+```rust
+fn find_user(id: u32) -> Option<User> {
+    users.iter().find(|u| u.id == id).cloned()
+}
+```
+
+3. **Custom Error Types**:
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum AppError {
+    #[error("Database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("Validation error: {0}")]
+    Validation(String),
+}
+```
+
+4. **Error Propagation with ?**:
+```rust
+fn process_user(id: u32) -> Result<User, AppError> {
+    let user = find_user(id).ok_or(AppError::Validation("User not found".to_string()))?;
+    let data = read_file(&user.config_path)?;
+    Ok(user)
+}
+```
+
+Your codebase uses: thiserror for custom errors, anyhow for generic error handling.
+```
+
+### 5. Code Review & Quality Assurance 🔍
+
+#### Pull Request Analysis
+**Scenario**: Reviewing team PR while grocery shopping.
+
+**Voice Review**:
+```
+You: "bro analyze this pull request for security issues and code quality"
+```
+
+**AI Analysis** (viewing PR diff on mobile):
+```
+PR Analysis for #123 - User Authentication Refactor:
+
+✅ **Security Improvements**:
+- Password hashing upgraded to bcrypt (was MD5)
+- Session tokens now expire after 30 minutes
+- Added rate limiting for login attempts
+
+⚠️ **Potential Issues**:
+- Password reset tokens don't expire (line 89)
+- No CSRF protection on password change endpoint
+- Error messages might leak user existence
+
+🔧 **Code Quality**:
+- Good: Comprehensive test coverage (+15 tests)
+- Good: Clear separation of concerns
+- Minor: Some functions exceed 50 lines
+
+📝 **Recommendations**:
+1. Add expiration to password reset tokens
+2. Implement CSRF protection
+3. Consider more generic error messages for security
+```
+
+### 6. Creative Problem Solving 💡
+
+#### Algorithm Implementation
+**Scenario**: Brainstorming sorting algorithm optimization during workout.
+
+**Voice Collaboration**:
+```
+You: "bro help me optimize this bubble sort implementation"
+Bro: [analyzes provided code]
+     "Current implementation: O(n²) time complexity
+
+     Optimization suggestions:
+     1. Early termination if no swaps in pass
+     2. Consider insertion sort for small arrays
+     3. Use hybrid approach with quicksort
+
+     Optimized version:"
+```
+
+**Generated Code**:
+```rust
+pub fn optimized_sort<T: PartialOrd + Clone>(arr: &mut [T]) {
+    if arr.len() <= 10 {
+        // Use insertion sort for small arrays
+        for i in 1..arr.len() {
+            let mut j = i;
+            while j > 0 && arr[j] < arr[j - 1] {
+                arr.swap(j, j - 1);
+                j -= 1;
             }
         }
-
-        // Validate prompt length and complexity
-        if prompt.len() > self.context_limits.max_prompt_length {
-            return Err(SecurityError::PromptTooLong);
-        }
-
-        Ok(())
+        return;
     }
-}
-```
 
-#### Code Generation Validation
-- **Syntax Checking**: Generated code must compile/parse correctly
-- **Security Analysis**: Scan for potentially harmful code patterns
-- **Context Awareness**: Code generation respects project conventions and security policies
-
-#### Model Isolation
-- **Sandbox Execution**: AI models run in isolated processes
-- **Resource Limits**: CPU, memory, and execution time constraints
-- **Crash Protection**: Model failures don't compromise system stability
-
-### Command Execution Security
-
-#### Sandbox Architecture
-```rust
-pub struct CommandSandbox {
-    allowed_commands: HashSet<String>,
-    dangerous_patterns: Vec<Regex>,
-    resource_limits: ResourceLimits,
-}
-
-impl CommandSandbox {
-    pub async fn execute(&self, command: &str) -> Result<CommandOutput> {
-        // Pre-execution validation
-        self.validate_command(command)?;
-
-        // Create restricted environment
-        let env = self.create_sandbox_environment()?;
-
-        // Execute with limits
-        let output = self.execute_restricted(command, env).await?;
-
-        // Post-execution analysis
-        self.analyze_output(&output)?;
-
-        Ok(output)
-    }
-}
-```
-
-#### Dangerous Command Detection
-**Blocked Patterns:**
-- System file modifications (`/etc/*`, `/boot/*`, `/sys/*`)
-- Device access (`/dev/mem`, `/dev/kmem`)
-- Network configuration changes
-- User management operations
-- Kernel module operations
-
-**Allowed Patterns (with restrictions):**
-- Development tools (`cargo`, `git`, `npm`, `docker`)
-- File operations in user directories
-- System monitoring (`ps`, `top`, `df`, `free`)
-- Network requests to safe domains
-
-#### Resource Protection
-- **CPU Limits**: Maximum 50% CPU usage per command
-- **Memory Limits**: 512MB per command execution
-- **Time Limits**: 30-second timeout for commands
-- **Process Limits**: Maximum 10 child processes
-
-### File System Security
-
-#### Path Validation
-```rust
-pub struct PathValidator {
-    allowed_roots: Vec<PathBuf>,
-    blocked_patterns: Vec<Regex>,
-}
-
-impl PathValidator {
-    pub fn validate(&self, path: &Path) -> Result<()> {
-        // Check against allowed root directories
-        let canonical_path = path.canonicalize()?;
-        let is_allowed = self.allowed_roots.iter().any(|root| {
-            canonical_path.starts_with(root)
-        });
-
-        if !is_allowed {
-            return Err(SecurityError::PathNotAllowed);
-        }
-
-        // Check for blocked patterns
-        let path_str = canonical_path.to_string_lossy();
-        for pattern in &self.blocked_patterns {
-            if pattern.is_match(&path_str) {
-                return Err(SecurityError::DangerousPath);
+    // Bubble sort with early termination
+    for i in 0..arr.len() {
+        let mut swapped = false;
+        for j in 0..arr.len() - 1 - i {
+            if arr[j] > arr[j + 1] {
+                arr.swap(j, j + 1);
+                swapped = true;
             }
         }
-
-        Ok(())
-    }
-}
-```
-
-#### Secrets Detection
-- **Pattern Matching**: Identify API keys, passwords, tokens
-- **Entropy Analysis**: Detect high-entropy strings likely to be secrets
-- **Content Classification**: Avoid processing sensitive file types
-- **Leak Prevention**: Block commands that might expose secrets
-
-### Network Security
-
-#### Outbound Connection Control
-- **Domain Whitelisting**: Only allow connections to trusted domains
-- **Protocol Restrictions**: HTTPS-only for external connections
-- **Certificate Validation**: Strict TLS certificate verification
-- **Request Limiting**: Rate limiting for external API calls
-
-#### WebRTC Security
-- **DTLS Encryption**: All WebRTC connections are encrypted
-- **Origin Validation**: WebRTC offers only accepted from allowed origins
-- **Session Limits**: Time-limited WebRTC sessions with automatic cleanup
-- **Screen Content Filtering**: Avoid streaming sensitive content
-
-### Authentication & Access Control
-
-#### Local-Only Access
-- **No Authentication**: Runs locally with no login required
-- **Network Isolation**: Only accessible from localhost
-- **Port Restrictions**: Configurable listening ports with validation
-
-#### API Access Control
-- **Request Validation**: All API inputs validated and sanitized
-- **Rate Limiting**: Prevent abuse with configurable limits
-- **Audit Logging**: All API calls logged for security review
-
-### Privacy Protections
-
-#### Data Handling
-- **No Persistent Audio Storage**: Voice recordings processed in memory only
-- **Temporary File Cleanup**: Any temporary files automatically removed
-- **Memory Zeroing**: Sensitive data overwritten before memory deallocation
-
-#### Usage Analytics
-- **Opt-in Only**: No automatic data collection
-- **Local Storage**: Any analytics stored locally only
-- **Minimal Data**: Only technical metrics, no personal information
-
-### Security Monitoring
-
-#### Real-time Monitoring
-```rust
-pub struct SecurityMonitor {
-    anomaly_detector: AnomalyDetector,
-    alert_system: AlertSystem,
-}
-
-impl SecurityMonitor {
-    pub async fn monitor_command(&self, command: &CommandExecution) {
-        // Detect unusual patterns
-        if self.anomaly_detector.is_anomalous(command) {
-            self.alert_system.alert(SecurityAlert::UnusualCommand {
-                command: command.to_string(),
-                user: command.user,
-                timestamp: Utc::now(),
-            });
+        if !swapped {
+            break; // Array is sorted
         }
     }
 }
 ```
 
-#### Incident Response
-- **Automatic Mitigation**: Suspicious activities trigger automatic responses
-- **Alert System**: Security events logged and optionally alerted
-- **Forensic Logging**: Detailed logs for incident investigation
-- **Recovery Procedures**: Automated system recovery from security events
+### 7. Emergency Response 🚨
 
-### Compliance Considerations
+#### Production Incident
+**Scenario**: Woken up by monitoring alert, need to investigate from bed.
 
-#### Data Protection
-- **GDPR Compliance**: Local processing avoids data transfer requirements
-- **Privacy by Design**: Security built into system architecture
-- **Data Minimization**: Only necessary data processed
+**Voice Investigation**:
+```
+You: "bro check production server and recent deployments"
+Bro: "Production Status:
+      - Server: Online ✓
+      - Last deployment: 2 hours ago (v2.1.4)
+      - Error rate: 2.3% (elevated)
+      - Recent logs show authentication timeouts"
 
-#### Security Standards
-- **Defense in Depth**: Multiple security layers prevent single-point failures
-- **Least Privilege**: Components have minimal required permissions
-- **Fail-Safe Defaults**: System fails securely when components fail
-
-### Security Configuration
-
-#### Default Security Settings
-```json
-{
-  "security": {
-    "sandbox_enabled": true,
-    "confirmation_required": true,
-    "secrets_detection": true,
-    "path_validation": true,
-    "network_restrictions": true,
-    "resource_limits": {
-      "max_cpu_percent": 50,
-      "max_memory_mb": 512,
-      "max_execution_time_sec": 30
-    }
-  }
-}
+You: "bro rollback to previous version if errors persist"
+Bro: [checks error trends]
+     "Error rate increasing. Initiating rollback...
+      - Stopped application servers
+      - Rolled back to v2.1.3
+      - Restarted services
+      - Monitoring for 5 minutes..."
 ```
 
-#### Customization Options
-- **Security Levels**: Relaxed, Standard, Strict, Paranoid
-- **Custom Allow Lists**: Organization-specific allowed commands
-- **Integration Hooks**: External security system integration
-- **Audit Levels**: Configurable logging verbosity
+## Technical Benefits Demonstrated
 
-### Testing & Validation
+### Voice Interface
+- **Natural Interaction**: Conversational commands feel intuitive
+- **Always Available**: Wake word makes assistance instantly accessible
+- **Error Recovery**: Clear feedback and automatic restart on failures
+- **Multi-modal**: Voice + touch + visual feedback work together
 
-#### Security Testing
-- **Penetration Testing**: Regular security assessments
-- **Fuzz Testing**: Random input testing for vulnerabilities
-- **Static Analysis**: Code analysis for security flaws
-- **Dependency Scanning**: Third-party library security checks
+### AI Capabilities
+- **Context Awareness**: Understands your specific codebase and conventions
+- **Code Quality**: Generates production-ready, well-tested code
+- **Safety First**: All actions go through confirmation and sandboxing
+- **Learning**: Adapts to your coding style and preferences
 
-#### Continuous Security
-- **Automated Scans**: Regular vulnerability scanning
-- **Dependency Updates**: Automated security patch application
-- **Security Monitoring**: Real-time threat detection
-- **Incident Response**: Documented procedures for security events
+### Mobile Experience
+- **Live Streaming**: Full desktop control from mobile device
+- **Touch Controls**: Natural gesture-based interaction
+- **Performance**: Optimized for mobile networks and battery life
+- **Cross-platform**: Works on iOS, Android, and any modern browser
 
-This comprehensive security model ensures that bro provides powerful voice-powered AI assistance while maintaining the highest standards of security and privacy protection.</content>
-<parameter name="filePath">/home/rendi/projects/bro/docs/security.md
+## Success Patterns
+
+### High-Value Scenarios
+- **Complex Tasks**: Multi-step planning for large features
+- **Learning**: Quick explanations and code examples
+- **Debugging**: Rapid error analysis and fixes
+- **Review**: Thorough code and security analysis
+- **Monitoring**: Proactive system health checks
+
+### User Workflows
+1. **Activation**: "bro ..." wakes the system
+2. **Command**: Natural language description of task
+3. **Processing**: AI analyzes context and generates solution
+4. **Confirmation**: User reviews and approves actions
+5. **Execution**: Safe, sandboxed command execution
+6. **Feedback**: Clear results and next steps
+
+These use cases demonstrate how "bro" transforms coding from a desk-bound activity into a natural, voice-driven experience that fits seamlessly into any lifestyle.</content>
+<parameter name="filePath">/home/rendi/projects/bro/docs/example-usecases.md
