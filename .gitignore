@@ -240,6 +240,13 @@ yarn.lock
 # Generated files
 generated/
 *.generated.*
+.rustc_info.json
+*/.rustc_info.json
+
+# Test artifacts
+test_file.txt
+test_results/
+**/test_results/
 
 # Local configuration
 .local/
