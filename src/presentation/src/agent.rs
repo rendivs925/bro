@@ -1,7 +1,7 @@
-use crate::types::{AgentPlan, AgentStep, AgentCommandRisk};
-use anyhow::{anyhow, Result};
 use crate::analysis::assess_agent_command_risk;
-use crate::utils::{extract_last_json, clean_command_output};
+use crate::types::{AgentCommandRisk, AgentPlan, AgentStep};
+use crate::utils::{clean_command_output, extract_last_json};
+use anyhow::{anyhow, Result};
 use shared::confirmation;
 
 /// Analyze agent task and generate execution plan
@@ -381,9 +381,7 @@ pub async fn execute_agent_step(step: &AgentStep) -> Result<()> {
 pub fn show_agent_completion_steps(plan: &AgentPlan) {
     // Analyze the completed plan to suggest next steps
     let has_web_server = plan.steps.iter().any(|s| {
-        s.command.contains("nginx")
-            || s.command.contains("apache")
-            || s.command.contains("httpd")
+        s.command.contains("nginx") || s.command.contains("apache") || s.command.contains("httpd")
     });
 
     let has_node_app = plan

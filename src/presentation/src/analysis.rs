@@ -1,4 +1,4 @@
-use crate::types::{CommandIntent, AgentCommandRisk, CommandRisk};
+use crate::types::{AgentCommandRisk, CommandIntent, CommandRisk};
 
 /// Analyze user query to determine intent
 pub fn analyze_query_intent(query: &str) -> CommandIntent {

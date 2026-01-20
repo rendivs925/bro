@@ -1,9 +1,9 @@
+use shared::types::Result;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::Command;
-use shared::types::Result;
 
 /// Editor integration for in-terminal editing of plans, diffs, and commands
 pub struct Editor;
@@ -43,7 +43,11 @@ impl Editor {
         let editor = Self::detect_editor();
         let temp_file = Self::create_temp_file(content, &content_type)?;
 
-        println!("[EDIT] Opening {} in {}", Self::content_type_name(&content_type), editor);
+        println!(
+            "[EDIT] Opening {} in {}",
+            Self::content_type_name(&content_type),
+            editor
+        );
 
         // Launch editor
         let status = Command::new(&editor)
@@ -52,7 +56,11 @@ impl Editor {
             .map_err(|e| anyhow::anyhow!("Failed to launch editor '{}': {}", editor, e))?;
 
         if !status.success() {
-            return Err(anyhow::anyhow!("Editor '{}' exited with error code {:?}", editor, status.code()));
+            return Err(anyhow::anyhow!(
+                "Editor '{}' exited with error code {:?}",
+                editor,
+                status.code()
+            ));
         }
 
         // Read back the edited content
@@ -143,7 +151,10 @@ impl Editor {
 
         for pattern in &dangerous_patterns {
             if command.contains(pattern) {
-                return Err(anyhow::anyhow!("Command contains potentially dangerous pattern: {}", pattern));
+                return Err(anyhow::anyhow!(
+                    "Command contains potentially dangerous pattern: {}",
+                    pattern
+                ));
             }
         }
 

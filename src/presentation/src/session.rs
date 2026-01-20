@@ -1,8 +1,6 @@
 use anyhow::Result;
 use colored::Colorize;
 
-
-
 /// Handle deleting a session
 pub async fn handle_delete_session(
     session_name: &str,

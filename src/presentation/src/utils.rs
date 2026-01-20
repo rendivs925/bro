@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::hash::{Hash, Hasher, DefaultHasher};
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 /// Find the project root by looking for common project files
 pub fn find_project_root() -> Option<String> {

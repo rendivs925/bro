@@ -16,7 +16,7 @@ use ratatui::{
     Frame, Terminal,
 };
 
-use crate::cli::{CliApp, Cli};
+use crate::cli::{Cli, CliApp};
 
 /// TUI application state
 pub struct TuiApp {
@@ -68,7 +68,11 @@ impl TuiApp {
             cursor_position: 0,
             status_message: "Ready".to_string(),
             show_overlay: None,
-            session_list: vec!["default_session".to_string(), "project-x".to_string(), "debug-session".to_string()],
+            session_list: vec![
+                "default_session".to_string(),
+                "project-x".to_string(),
+                "debug-session".to_string(),
+            ],
             current_session: Some("default_session".to_string()),
             command_history: Vec::new(),
             history_index: None,
@@ -83,10 +87,7 @@ impl TuiRunner {
         let terminal = Terminal::new(backend)?;
         let app = TuiApp::new(cli)?;
 
-        Ok(Self {
-            terminal,
-            app,
-        })
+        Ok(Self { terminal, app })
     }
 
     /// Run the TUI application
@@ -103,22 +104,23 @@ impl TuiRunner {
         // Main event loop
         loop {
             // Draw the UI
-            self.terminal.draw(|f| self.app.draw(f))?;
+            let app = &self.app;
+            self.terminal.draw(move |f| Self::draw_ui(f, app))?;
 
             // Handle events
             if event::poll(Duration::from_millis(100))? {
                 if let Event::Key(key) = event::read()? {
                     match self.app.current_mode {
                         TuiMode::Normal => {
-                            if self.app.handle_normal_mode(key).await? {
+                            if self.handle_normal_mode(key).await? {
                                 break; // Exit application
                             }
                         }
                         TuiMode::Insert => {
-                            self.app.handle_insert_mode(key);
+                            self.handle_insert_mode(key);
                         }
                         TuiMode::Command => {
-                            if self.app.handle_command_mode(key).await? {
+                            if self.handle_command_mode(key).await? {
                                 break;
                             }
                         }
@@ -167,13 +169,6 @@ impl TuiRunner {
                 self.app.cursor_position = self.app.input_buffer.len();
                 self.app.status_message = "INSERT".to_string();
             }
-            KeyCode::Char('o') => {
-                // Open new line below (like vim 'o')
-                self.app.input_buffer.push('\n');
-                self.app.cursor_position = self.app.input_buffer.len();
-                self.app.current_mode = TuiMode::Insert;
-                self.app.status_message = "INSERT".to_string();
-            }
             KeyCode::Char('O') => {
                 // Open new line above (like vim 'O')
                 self.app.input_buffer.insert(0, '\n');
@@ -205,8 +200,15 @@ impl TuiRunner {
                 if let Some(word_end) = rest.find(|c: char| c.is_whitespace()) {
                     self.app.cursor_position += word_end + 1;
                     // Skip additional whitespace
-                    while self.app.cursor_position < self.app.input_buffer.len() &&
-                          self.app.input_buffer.chars().nth(self.app.cursor_position).unwrap().is_whitespace() {
+                    while self.app.cursor_position < self.app.input_buffer.len()
+                        && self
+                            .app
+                            .input_buffer
+                            .chars()
+                            .nth(self.app.cursor_position)
+                            .unwrap()
+                            .is_whitespace()
+                    {
                         self.app.cursor_position += 1;
                     }
                 } else {
@@ -218,11 +220,27 @@ impl TuiRunner {
                 if self.app.cursor_position > 0 {
                     let mut pos = self.app.cursor_position - 1;
                     // Skip current whitespace
-                    while pos > 0 && self.app.input_buffer.chars().nth(pos).unwrap().is_whitespace() {
+                    while pos > 0
+                        && self
+                            .app
+                            .input_buffer
+                            .chars()
+                            .nth(pos)
+                            .unwrap()
+                            .is_whitespace()
+                    {
                         pos -= 1;
                     }
                     // Find word start
-                    while pos > 0 && !self.app.input_buffer.chars().nth(pos - 1).unwrap().is_whitespace() {
+                    while pos > 0
+                        && !self
+                            .app
+                            .input_buffer
+                            .chars()
+                            .nth(pos - 1)
+                            .unwrap()
+                            .is_whitespace()
+                    {
                         pos -= 1;
                     }
                     self.app.cursor_position = pos;
@@ -256,6 +274,11 @@ impl TuiRunner {
             }
 
             // Overlays and special functions (Ctrl+key)
+            KeyCode::Char('o') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                // Ctrl+O: Show context overlay
+                self.app.show_overlay = Some(Overlay::Context);
+                self.app.status_message = "CONTEXT".to_string();
+            }
             KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 // Ctrl+S: Show sessions overlay
                 self.app.show_overlay = Some(Overlay::Sessions);
@@ -271,10 +294,14 @@ impl TuiRunner {
                 self.app.show_overlay = Some(Overlay::Tools);
                 self.app.status_message = "TOOLS".to_string();
             }
-            KeyCode::Char('o') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                // Ctrl+O: Show context overlay
-                self.app.show_overlay = Some(Overlay::Context);
-                self.app.status_message = "CONTEXT".to_string();
+
+            // Regular 'o' key (must come after Ctrl+O to avoid unreachable pattern)
+            KeyCode::Char('o') => {
+                // Open new line below (like vim 'o')
+                self.app.input_buffer.push('\n');
+                self.app.cursor_position = self.app.input_buffer.len();
+                self.app.current_mode = TuiMode::Insert;
+                self.app.status_message = "INSERT".to_string();
             }
 
             // History navigation (bash-style)
@@ -330,7 +357,10 @@ impl TuiRunner {
             return;
         }
 
-        let current_index = self.app.history_index.unwrap_or(self.app.command_history.len());
+        let current_index = self
+            .app
+            .history_index
+            .unwrap_or(self.app.command_history.len());
 
         let new_index = if previous {
             if current_index > 0 {
@@ -373,7 +403,8 @@ impl TuiRunner {
             'n' => {
                 // Create new session
                 self.app.show_overlay = None;
-                self.app.status_message = "New session: type name and press Enter (not implemented yet)".to_string();
+                self.app.status_message =
+                    "New session: type name and press Enter (not implemented yet)".to_string();
             }
             'd' => {
                 // Delete current session (if not default)
@@ -401,7 +432,8 @@ impl TuiRunner {
             }
             '2' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Help: i=insert, :q=quit, hjkl=navigate, Ctrl+P/N=history ".to_string();
+                self.app.status_message =
+                    "Help: i=insert, :q=quit, hjkl=navigate, Ctrl+P/N=history ".to_string();
             }
             '3' => {
                 self.app.show_overlay = None;
@@ -456,11 +488,13 @@ impl TuiRunner {
             }
             '2' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Help: i=insert, :q=quit, hjkl=navigate, Ctrl+P/N=history".to_string();
+                self.app.status_message =
+                    "Help: i=insert, :q=quit, hjkl=navigate, Ctrl+P/N=history".to_string();
             }
             '3' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Session switch: use :session <name>. Current: default_session ".to_string();
+                self.app.status_message =
+                    "Session switch: use :session <name>. Current: default_session ".to_string();
             }
             '4' => {
                 self.app.show_overlay = None;
@@ -470,10 +504,12 @@ impl TuiRunner {
             }
             '5' => {
                 self.app.show_overlay = None;
-                self.app.status_message = format!("Status: Mode={:?}, Session={:?}, History={} cmds",
+                self.app.status_message = format!(
+                    "Status: Mode={:?}, Session={:?}, History={} cmds",
                     self.app.current_mode,
                     self.app.current_session,
-                    self.app.command_history.len());
+                    self.app.command_history.len()
+                );
             }
             '6' => {
                 self.app.show_overlay = None;
@@ -482,17 +518,21 @@ impl TuiRunner {
             }
             '7' => {
                 self.app.show_overlay = None;
-                self.app.status_message = "Mode switch: use :mode <plan|build|run|chat>. Current: normal ".to_string();
+                self.app.status_message =
+                    "Mode switch: use :mode <plan|build|run|chat>. Current: normal ".to_string();
             }
             '8' => {
                 self.app.show_overlay = None;
-                let history_preview: Vec<String> = self.app.command_history
+                let history_preview: Vec<String> = self
+                    .app
+                    .command_history
                     .iter()
                     .rev()
                     .take(5)
                     .map(|cmd| format!("  {}", cmd))
                     .collect();
-                self.app.status_message = format!("Recent history:\n{}", history_preview.join("\n"));
+                self.app.status_message =
+                    format!("Recent history:\n{}", history_preview.join("\n"));
             }
             _ => {}
         }
@@ -594,7 +634,8 @@ impl TuiRunner {
         // Parse the command and determine what to do
         let parts: Vec<&str> = command.split_whitespace().collect();
         let result = match parts.get(0).map(|s| *s) {
-            Some("ls") | Some("pwd") | Some("cd") | Some("mkdir") | Some("rm") | Some("cp") | Some("mv") => {
+            Some("ls") | Some("pwd") | Some("cd") | Some("mkdir") | Some("rm") | Some("cp")
+            | Some("mv") => {
                 // File system commands - execute directly
                 self.execute_shell_command(command).await
             }
@@ -652,11 +693,7 @@ impl TuiRunner {
     async fn execute_shell_command(&mut self, command: &str) -> Result<String> {
         use tokio::process::Command;
 
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(command)
-            .output()
-            .await?;
+        let output = Command::new("sh").arg("-c").arg(command).output().await?;
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -671,13 +708,19 @@ impl TuiRunner {
     /// Execute a plan mode command
     async fn execute_plan_command(&mut self, goal: &str) -> Result<String> {
         // In a real implementation, this would call the CLI plan logic
-        Ok(format!("Plan created for: '{}'. Use build mode to execute.", goal))
+        Ok(format!(
+            "Plan created for: '{}'. Use build mode to execute.",
+            goal
+        ))
     }
 
     /// Execute a build mode command
     async fn execute_build_command(&mut self, goal: &str) -> Result<String> {
         // In a real implementation, this would call the CLI build logic
-        Ok(format!("Build executed for: '{}'. Changes applied safely.", goal))
+        Ok(format!(
+            "Build executed for: '{}'. Changes applied safely.",
+            goal
+        ))
     }
 
     /// Execute a run mode command
@@ -695,7 +738,10 @@ impl TuiRunner {
     /// Execute a RAG mode command
     async fn execute_rag_command(&mut self, query: &str) -> Result<String> {
         // In a real implementation, this would call the CLI RAG logic
-        Ok(format!("RAG query executed: '{}'. Found relevant context.", query))
+        Ok(format!(
+            "RAG query executed: '{}'. Found relevant context.",
+            query
+        ))
     }
 
     /// Execute a vision mode command using ChatGPT browser automation
@@ -711,7 +757,12 @@ impl TuiRunner {
                 }
                 browser
             }
-            Err(e) => return Ok(format!("Vision mode not available: {}. Install Docker for cross-platform support.", e)),
+            Err(e) => {
+                return Ok(format!(
+                    "Vision mode not available: {}. Install Docker for cross-platform support.",
+                    e
+                ))
+            }
         };
 
         // Check if ChatGPT is accessible
@@ -759,14 +810,16 @@ impl TuiRunner {
                 return Ok(true);
             }
             "h" | "help" => {
-                self.app.status_message = "Help: i=insert, :q=quit, :w=save, hjkl=navigate".to_string();
+                self.app.status_message =
+                    "Help: i=insert, :q=quit, :w=save, hjkl=navigate".to_string();
             }
             "session" => {
                 if let Some(name) = parts.get(1) {
                     self.app.current_session = Some(name.to_string());
                     self.app.status_message = format!("Switched to session: {}", name);
                 } else {
-                    self.app.status_message = "Usage: :session <name>". Current: default_session".to_string();
+                    self.app.status_message =
+                        format!("Usage: :session <name>. Current: {}", "default_session");
                 }
             }
             "mode" => {
@@ -779,29 +832,36 @@ impl TuiRunner {
                         _ => self.app.status_message = format!("Unknown mode: {}", mode),
                     }
                 } else {
-                    self.app.status_message = "Usage: :mode <plan|build|run|chat>". Current: normal".to_string();
+                    self.app.status_message =
+                        format!("Usage: :mode <plan|build|run|chat>. Current: {}", "normal");
                 }
             }
             "clear" => {
                 self.app.input_buffer.clear();
                 self.app.cursor_position = 0;
-                self.app.status_message = "Buffer cleared".to_string();
+                self.app.status_message = format!("Buffer {}", "cleared");
             }
             "status" => {
-                self.app.status_message = format!("Mode: {:?}, Session: {:?}, Buffer: {} chars",
+                self.app.status_message = format!(
+                    "Mode: {:?}, Session: {:?}, Buffer: {} {}",
                     self.app.current_mode,
                     self.app.current_session,
-                    self.app.input_buffer.len());
+                    self.app.input_buffer.len(),
+                    "chars"
+                );
             }
             _ => {
-                self.app.status_message = format!("Unknown command: {}. Type :help for commands", command);
+                self.app.status_message = format!(
+                    "Unknown command: {}. Type :help for {}",
+                    command, "commands"
+                );
             }
         }
         Ok(false)
     }
 
     /// Draw the TUI interface
-    fn draw(&self, f: &mut Frame) {
+    fn draw_ui(f: &mut Frame, app: &TuiApp) {
         let size = f.size();
 
         // Create main layout
@@ -815,22 +875,22 @@ impl TuiRunner {
             .split(size);
 
         // Draw header
-        self.draw_header(f, chunks[0]);
+        Self::draw_header(f, chunks[0], app);
 
         // Draw main content
-        self.draw_main_content(f, chunks[1]);
+        Self::draw_main_content(f, chunks[1], app);
 
         // Draw status bar
-        self.draw_status_bar(f, chunks[2]);
+        Self::draw_status_bar(f, chunks[2], app);
 
         // Draw overlay if active
-        if let Some(overlay) = &self.app.show_overlay {
-            self.draw_overlay(f, overlay.clone());
+        if let Some(overlay) = &app.show_overlay {
+            Self::draw_overlay(f, overlay.clone(), app);
         }
     }
 
     /// Draw the header section
-    fn draw_header(&self, f: &mut Frame, area: Rect) {
+    fn draw_header(f: &mut Frame, area: Rect, app: &TuiApp) {
         let header_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -841,32 +901,40 @@ impl TuiRunner {
             .split(area);
 
         // Title
-        let title = Paragraph::new("Vibe CLI")
-            .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        let title = Paragraph::new(format!("Vibe {}", "CLI"))
+            .style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
             .alignment(Alignment::Left);
         f.render_widget(title, header_chunks[0]);
 
         // Session info
-        let session = self.app.current_session.as_deref().unwrap_or("no session");
+        let session = app.current_session.as_deref().unwrap_or("no session");
         let session_info = Paragraph::new(format!("Session: {}", session))
             .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center);
         f.render_widget(session_info, header_chunks[1]);
 
         // Mode indicator
-        let mode_text = match self.app.current_mode {
+        let mode_text = match app.current_mode {
             TuiMode::Normal => "NORMAL",
             TuiMode::Insert => "INSERT",
             TuiMode::Command => "COMMAND",
         };
         let mode = Paragraph::new(mode_text)
-            .style(Style::default().fg(Color::Green).add_modifier(Modifier::BOLD))
+            .style(
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            )
             .alignment(Alignment::Right);
         f.render_widget(mode, header_chunks[2]);
     }
 
     /// Draw the main content area
-    fn draw_main_content(&self, f: &mut Frame, area: Rect) {
+    fn draw_main_content(f: &mut Frame, area: Rect, app: &TuiApp) {
         let content_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -878,18 +946,17 @@ impl TuiRunner {
             .split(area);
 
         // History area (show last 3 commands)
-        let history_block = Block::default()
-            .borders(Borders::ALL)
-            .title("History");
+        let history_block = Block::default().borders(Borders::ALL).title("History");
 
-        let history_text = self.app.command_history
+        let history_text = app
+            .command_history
             .iter()
             .rev()
             .take(3)
             .enumerate()
             .map(|(i, cmd)| {
                 let prefix = match i {
-                    0 => "↑ ",
+                    0 => "^ ",
                     1 => "  ",
                     2 => "  ",
                     _ => "  ",
@@ -907,14 +974,12 @@ impl TuiRunner {
         f.render_widget(history, content_chunks[0]);
 
         // Input area
-        let input_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Command");
+        let input_block = Block::default().borders(Borders::ALL).title("Command");
 
-        let input_text = if self.app.current_mode == TuiMode::Command {
-            format!(":{}", self.app.input_buffer)
+        let input_text = if app.current_mode == TuiMode::Command {
+            format!(":{}", app.input_buffer)
         } else {
-            self.app.input_buffer.clone()
+            app.input_buffer.clone()
         };
 
         let input = Paragraph::new(input_text)
@@ -923,27 +988,25 @@ impl TuiRunner {
         f.render_widget(input, content_chunks[1]);
 
         // Set cursor position for input
-        let cursor_x = if self.app.current_mode == TuiMode::Command {
-            content_chunks[1].x + 1 + self.app.cursor_position as u16 + 1 // +1 for ':' prefix
+        let cursor_x = if app.current_mode == TuiMode::Command {
+            content_chunks[1].x + 1 + app.cursor_position as u16 + 1 // +1 for ':' prefix
         } else {
-            content_chunks[1].x + 1 + self.app.cursor_position as u16
+            content_chunks[1].x + 1 + app.cursor_position as u16
         };
         let cursor_y = content_chunks[1].y + 1;
         f.set_cursor(cursor_x, cursor_y);
 
         // Message area
-        let message_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Status");
+        let message_block = Block::default().borders(Borders::ALL).title("Status");
 
-        let message = Paragraph::new(self.app.status_message.as_str())
+        let message = Paragraph::new(app.status_message.as_str())
             .block(message_block)
             .wrap(Wrap { trim: true });
         f.render_widget(message, content_chunks[3]);
     }
 
     /// Draw the status bar
-    fn draw_status_bar(&self, f: &mut Frame, area: Rect) {
+    fn draw_status_bar(f: &mut Frame, area: Rect, app: &TuiApp) {
         let status_chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
@@ -955,32 +1018,32 @@ impl TuiRunner {
             ])
             .split(area);
 
-        let hints = match self.app.current_mode {
+        let hints = match app.current_mode {
             TuiMode::Normal => vec![
-                "i insert",
-                "⌘P palette",
-                "⌘S sessions",
-                "⌘K tools",
-                ": cmd",
+                format!("i {}", "insert"),
+                format!("Cmd+P {}", "palette"),
+                format!("Cmd+S {}", "sessions"),
+                format!("Cmd+K {}", "tools"),
+                format!(": {}", "cmd"),
             ],
             TuiMode::Insert => vec![
-                "esc normal",
-                "⏎ execute",
-                "hjkl move",
-                "w/b words",
-                "",
+                format!("esc {}", "normal"),
+                format!("Enter {}", "execute"),
+                format!("hjkl {}", "move"),
+                format!("w/b {}", "words"),
+                "".to_string(),
             ],
             TuiMode::Command => vec![
-                "⏎ run",
-                "esc cancel",
-                "tab complete",
-                "",
-                "",
+                format!("Enter {}", "run"),
+                format!("esc {}", "cancel"),
+                format!("tab {}", "complete"),
+                "".to_string(),
+                "".to_string(),
             ],
         };
 
         for (i, hint) in hints.iter().enumerate() {
-            let hint_widget = Paragraph::new(*hint)
+            let hint_widget = Paragraph::new(hint.as_str())
                 .style(Style::default().fg(Color::Gray))
                 .alignment(Alignment::Center);
             f.render_widget(hint_widget, status_chunks[i]);
@@ -988,20 +1051,20 @@ impl TuiRunner {
     }
 
     /// Draw overlay windows
-    fn draw_overlay(&self, f: &mut Frame, overlay: Overlay) {
+    fn draw_overlay(f: &mut Frame, overlay: Overlay, app: &TuiApp) {
         let area = centered_rect(60, 40, f.size());
         f.render_widget(Clear, area);
 
         match overlay {
-            Overlay::Sessions => self.draw_sessions_overlay(f, area),
-            Overlay::Tools => self.draw_tools_overlay(f, area),
-            Overlay::Context => self.draw_context_overlay(f, area),
-            Overlay::Palette => self.draw_palette_overlay(f, area),
+            Overlay::Sessions => Self::draw_sessions_overlay(f, area, app),
+            Overlay::Tools => Self::draw_tools_overlay(f, area, app),
+            Overlay::Context => Self::draw_context_overlay(f, area, app),
+            Overlay::Palette => Self::draw_palette_overlay(f, area, app),
         }
     }
 
     /// Draw sessions overlay
-    fn draw_sessions_overlay(&self, f: &mut Frame, area: Rect) {
+    fn draw_sessions_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1016,17 +1079,30 @@ impl TuiRunner {
             .title("Session Manager")
             .borders(Borders::ALL);
 
-        let header_text = vec![
-            Line::from(vec![
-                Span::styled("Actions: ", Style::default().fg(Color::Yellow)),
-                Span::styled("n", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                Span::styled("ew session, ", Style::default().fg(Color::Gray)),
-                Span::styled("d", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                Span::styled("elete, ", Style::default().fg(Color::Gray)),
-                Span::styled("Enter", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                Span::styled(" switch", Style::default().fg(Color::Gray)),
-            ]),
-        ];
+        let header_text = vec![Line::from(vec![
+            Span::styled("Actions: ", Style::default().fg(Color::Yellow)),
+            Span::styled(
+                "n",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("ew session, ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                "d",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("elete, ", Style::default().fg(Color::Gray)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" switch", Style::default().fg(Color::Gray)),
+        ])];
 
         let header = Paragraph::new(header_text)
             .block(header_block)
@@ -1034,17 +1110,17 @@ impl TuiRunner {
         f.render_widget(header, chunks[0]);
 
         // Session list
-        let list_block = Block::default()
-            .borders(Borders::ALL);
+        let list_block = Block::default().borders(Borders::ALL);
 
-        let items: Vec<ListItem> = self.app.session_list
+        let items: Vec<ListItem> = app
+            .session_list
             .iter()
             .enumerate()
             .map(|(i, session)| {
                 let mut style = Style::default();
                 let mut prefix = "  ";
 
-                if Some(session) == self.app.current_session.as_ref() {
+                if Some(session) == app.current_session.as_ref() {
                     style = style.fg(Color::Green).add_modifier(Modifier::BOLD);
                     prefix = "● ";
                 }
@@ -1064,21 +1140,26 @@ impl TuiRunner {
         f.render_widget(list, chunks[1]);
 
         // Footer hints
-        let footer_text = vec![
-            Line::from(vec![
-                Span::styled("Use number keys to select, ", Style::default().fg(Color::Gray)),
-                Span::styled("Esc", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-                Span::styled(" to close", Style::default().fg(Color::Gray)),
-            ]),
-        ];
+        let footer_text = vec![Line::from(vec![
+            Span::styled(
+                "Use number keys to select, ",
+                Style::default().fg(Color::Gray),
+            ),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(" to close", Style::default().fg(Color::Gray)),
+        ])];
 
-        let footer = Paragraph::new(footer_text)
-            .alignment(Alignment::Center);
+        let footer = Paragraph::new(footer_text).alignment(Alignment::Center);
         f.render_widget(footer, chunks[2]);
     }
 
     /// Draw tools overlay
-    fn draw_tools_overlay(&self, f: &mut Frame, area: Rect) {
+    fn draw_tools_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1099,12 +1180,19 @@ impl TuiRunner {
         f.render_widget(header, chunks[0]);
 
         // Tools list
-        let list_block = Block::default()
-            .borders(Borders::ALL);
+        let list_block = Block::default().borders(Borders::ALL);
 
         let tools = vec![
-            ("1", "Plan Mode", "Create execution plans without running commands"),
-            ("2", "Build Mode", "Safe code modifications with AI assistance"),
+            (
+                "1",
+                "Plan Mode",
+                "Create execution plans without running commands",
+            ),
+            (
+                "2",
+                "Build Mode",
+                "Safe code modifications with AI assistance",
+            ),
             ("3", "Run Mode", "Execute multi-step command sequences"),
             ("4", "Chat Mode", "Interactive conversation with AI"),
             ("5", "RAG Mode", "Query codebase with context retrieval"),
@@ -1114,7 +1202,12 @@ impl TuiRunner {
             .iter()
             .map(|(num, name, desc)| {
                 ListItem::new(Line::from(vec![
-                    Span::styled(format!("{} {}", num, name), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{} {}", num, name),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(" - ", Style::default().fg(Color::Gray)),
                     Span::styled(*desc, Style::default().fg(Color::White)),
                 ]))
@@ -1132,7 +1225,7 @@ impl TuiRunner {
     }
 
     /// Draw context overlay
-    fn draw_context_overlay(&self, f: &mut Frame, area: Rect) {
+    fn draw_context_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1153,8 +1246,7 @@ impl TuiRunner {
         f.render_widget(header, chunks[0]);
 
         // Context list
-        let list_block = Block::default()
-            .borders(Borders::ALL);
+        let list_block = Block::default().borders(Borders::ALL);
 
         let context_items = vec![
             ("1", "Directory Files", "List files in current directory"),
@@ -1168,7 +1260,12 @@ impl TuiRunner {
             .iter()
             .map(|(num, name, desc)| {
                 ListItem::new(Line::from(vec![
-                    Span::styled(format!("{} {}", num, name), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{} {}", num, name),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(" - ", Style::default().fg(Color::Gray)),
                     Span::styled(*desc, Style::default().fg(Color::White)),
                 ]))
@@ -1186,7 +1283,7 @@ impl TuiRunner {
     }
 
     /// Draw command palette overlay
-    fn draw_palette_overlay(&self, f: &mut Frame, area: Rect) {
+    fn draw_palette_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1207,8 +1304,7 @@ impl TuiRunner {
         f.render_widget(header, chunks[0]);
 
         // Commands list
-        let list_block = Block::default()
-            .borders(Borders::ALL);
+        let list_block = Block::default().borders(Borders::ALL);
 
         let commands = vec![
             ("1", ":quit", "Exit the application"),
@@ -1225,7 +1321,12 @@ impl TuiRunner {
             .iter()
             .map(|(num, cmd, desc)| {
                 ListItem::new(Line::from(vec![
-                    Span::styled(format!("{} {}", num, cmd), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                    Span::styled(
+                        format!("{} {}", num, cmd),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                     Span::styled(" - ", Style::default().fg(Color::Gray)),
                     Span::styled(*desc, Style::default().fg(Color::White)),
                 ]))
