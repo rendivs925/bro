@@ -8,6 +8,9 @@ use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use domain::entities::voice_command::VoiceCommand;
+use domain::entities::workflow::Workflow;
+
 fn find_project_root() -> Option<String> {
     let mut current = std::env::current_dir().ok()?;
     loop {
@@ -518,6 +521,14 @@ pub struct PowerUserConfig {
     /// Custom scripts and macros
     #[serde(default)]
     pub scripts: ScriptConfig,
+
+    /// Voice commands
+    #[serde(default)]
+    pub commands: Vec<domain::entities::voice_command::VoiceCommand>,
+
+    /// Workflows
+    #[serde(default)]
+    pub workflows: Vec<domain::entities::workflow::Workflow>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -795,9 +806,19 @@ impl Default for BatchConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Script {
+    pub id: String,
+    pub name: String,
+    pub script_type: shared::types::ScriptType,
+    pub content: String,
+    pub description: String,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScriptConfig {
     /// User-defined scripts
-    pub scripts: HashMap<String, String>,
+    pub scripts: Vec<Script>,
     /// Macro recordings
     pub macros: HashMap<String, Vec<String>>,
     /// Script execution settings
@@ -807,7 +828,7 @@ pub struct ScriptConfig {
 impl Default for ScriptConfig {
     fn default() -> Self {
         Self {
-            scripts: HashMap::new(),
+            scripts: Vec::new(),
             macros: HashMap::new(),
             execution: HashMap::new(),
         }
@@ -826,6 +847,8 @@ impl Default for PowerUserConfig {
             editors: EditorConfig::default(),
             batch: BatchConfig::default(),
             scripts: ScriptConfig::default(),
+            commands: Vec::new(),
+            workflows: Vec::new(),
         }
     }
 }
@@ -1217,7 +1240,7 @@ impl PluginManager {
     /// Initialize all loaded plugins
     pub async fn initialize_plugins(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         for (name, plugin) in &self.plugins {
-            let plugin_config = self.config.power_user.plugins.settings.get(name).cloned().unwrap_or_default();
+            let plugin_config = self.config.settings.get(name).cloned().unwrap_or_default();
             // Note: We need to modify the plugin trait to allow mutable access for initialization
             // For now, this is a simplified version
             println!("Initialized plugin: {}", name);

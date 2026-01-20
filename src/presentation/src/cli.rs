@@ -385,11 +385,17 @@ pub struct Cli {
     pub build: bool,
 
     /// Launch TUI interface for enhanced interaction
-    #[arg(long, help = "Launch the terminal user interface for sessions and chat history management")]
+    #[arg(
+        long,
+        help = "Launch the terminal user interface for sessions and chat history management"
+    )]
     pub tui: bool,
 
     /// Use computer vision for zero-cost AI workflows
-    #[arg(long, help = "Enable computer vision mode with Playwright browser automation for web AI tools")]
+    #[arg(
+        long,
+        help = "Enable computer vision mode with Playwright browser automation for web AI tools"
+    )]
     pub vision: bool,
 
     /// Enable voice input mode for hands-free operation
@@ -397,7 +403,10 @@ pub struct Cli {
     pub voice: bool,
 
     /// Start web interface for mobile control and streaming
-    #[arg(long, help = "Start web server for mobile desktop streaming and voice control")]
+    #[arg(
+        long,
+        help = "Start web server for mobile desktop streaming and voice control"
+    )]
     pub web: bool,
 
     /// Run tests with real-time monitoring
@@ -1341,7 +1350,7 @@ impl CliApp {
         if let Some(config_path) = &cli.generate_config {
             let power_config = infrastructure::config::PowerUserConfig::default();
             let path = PathBuf::from(config_path);
-            match power_config.power_user.save_to_file(&path) {
+            match power_config.save_to_file(&path) {
                 Ok(_) => {
                     println!("Default configuration saved to: {}", path.display());
                     println!("Edit this file to customize your power user settings.");
@@ -1445,7 +1454,8 @@ impl CliApp {
             ("context", cli.context),
         ];
 
-        let active_modes: Vec<&str> = mode_flags.iter()
+        let active_modes: Vec<&str> = mode_flags
+            .iter()
             .filter(|(_, active)| *active)
             .map(|(name, _)| *name)
             .collect();
@@ -1453,7 +1463,10 @@ impl CliApp {
         // TUI can be combined with other modes (it launches the interface with that mode active)
         // But other modes cannot be combined with each other
         if active_modes.len() > 1 && !cli.tui {
-            eprintln!("❌ ERROR: Multiple conflicting modes specified: {}", active_modes.join(", "));
+            eprintln!(
+                "❌ ERROR: Multiple conflicting modes specified: {}",
+                active_modes.join(", ")
+            );
             eprintln!("   Please specify only one mode at a time.");
             eprintln!("   Use --help to see available options.");
             return Ok(());
@@ -4581,25 +4594,36 @@ COMMAND:"#,
                     Ok(result) if result.success => {
                         println!("");
                         println!("🤖 AI Response:");
-                        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                        println!(
+                            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                        );
                         println!("{}", result.response);
-                        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                        println!(
+                            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                        );
                         println!("");
                         println!("✅ Query completed successfully (zero-cost AI workflow)");
                     }
                     Ok(result) => {
-                        println!("❌ Query failed: {}", result.error_message.unwrap_or("Unknown error".to_string()));
+                        println!(
+                            "❌ Query failed: {}",
+                            result.error_message.unwrap_or("Unknown error".to_string())
+                        );
                     }
                     Err(e) => {
                         println!("❌ Query error: {}", e);
-                        println!("💡 Make sure you're logged into ChatGPT at https://chat.openai.com");
+                        println!(
+                            "💡 Make sure you're logged into ChatGPT at https://chat.openai.com"
+                        );
                         println!("💡 Keep a browser window open with your ChatGPT session");
                     }
                 }
             }
             _ => {
                 println!("❌ ChatGPT not accessible");
-                println!("💡 Please ensure you're logged into https://chat.openai.com in a browser");
+                println!(
+                    "💡 Please ensure you're logged into https://chat.openai.com in a browser"
+                );
                 println!("💡 The browser must remain open during queries for session detection");
             }
         }

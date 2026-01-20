@@ -1,16 +1,13 @@
 //! Session management functionality for CLI operations
 
+use crate::utils::find_project_root;
 use colored::Colorize;
-use infrastructure::session_store::{SessionStore, SessionMetadata};
+use infrastructure::session_store::{SessionMetadata, SessionStore};
 use shared::confirmation::ask_confirmation;
 use shared::types::Result;
-use crate::utils::find_project_root;
 
 /// Display all sessions for the current project
-pub fn display_sessions(
-    store: &SessionStore,
-    current_session: Option<&String>,
-) -> Result<()> {
+pub fn display_sessions(store: &SessionStore, current_session: Option<&String>) -> Result<()> {
     let project_root = find_project_root().unwrap_or_else(|| "unknown".to_string());
     let project_hash = store.project_hash();
 
@@ -21,9 +18,7 @@ pub fn display_sessions(
     match store.list_sessions() {
         Ok(sessions) if sessions.is_empty() => {
             println!("{}", "No sessions found.".dimmed());
-            println!(
-                "Create your first session with: ai --session \"my-session\" --build \"...\""
-            );
+            println!("Create your first session with: ai --session \"my-session\" --build \"...\"");
         }
         Ok(sessions) => {
             println!("Sessions:");
@@ -60,10 +55,7 @@ pub fn display_sessions(
 }
 
 /// Delete a session with user confirmation
-pub fn delete_session_with_confirmation(
-    store: &SessionStore,
-    session_name: &str,
-) -> Result<()> {
+pub fn delete_session_with_confirmation(store: &SessionStore, session_name: &str) -> Result<()> {
     let prompt = format!(
         "Permanently delete session '{}' and all its data?",
         session_name

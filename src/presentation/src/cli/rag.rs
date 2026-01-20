@@ -40,8 +40,8 @@ fn read_docx_content(file: &str) -> Result<String> {
     let bytes = std::fs::read(file)
         .map_err(|e| anyhow::anyhow!("Error reading DOCX file '{}': {}", file, e))?;
 
-    let docx = read_docx(&bytes)
-        .map_err(|e| anyhow::anyhow!("Error parsing DOCX '{}': {}", file, e))?;
+    let docx =
+        read_docx(&bytes).map_err(|e| anyhow::anyhow!("Error parsing DOCX '{}': {}", file, e))?;
 
     let mut text = String::new();
     for child in &docx.document.children {

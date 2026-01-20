@@ -66,7 +66,11 @@ pub async fn handle_events(event_receiver: Receiver<BackgroundEvent>) {
             BackgroundEvent::GitStatus { status } => match status {
                 GitStatus::Clean => println!("{} Repository is clean", "Clean".green()),
                 GitStatus::Dirty { modified_files } => {
-                    println!("{} {} modified files", "Dirty".yellow(), modified_files.len());
+                    println!(
+                        "{} {} modified files",
+                        "Dirty".yellow(),
+                        modified_files.len()
+                    );
                 }
                 GitStatus::Untracked { files } => {
                     println!("{} {} untracked files", "Untracked".yellow(), files.len());

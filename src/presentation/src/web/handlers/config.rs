@@ -58,6 +58,7 @@ pub async fn get_config(State(state): State<AppState>) -> Json<ConfigResponse> {
     let config = state.config.read().await;
 
     let commands: Vec<CommandInfo> = config
+        .power_user
         .commands
         .iter()
         .map(|cmd| CommandInfo {
@@ -71,6 +72,7 @@ pub async fn get_config(State(state): State<AppState>) -> Json<ConfigResponse> {
 
     // Map workflows from config
     let workflows: Vec<WorkflowInfo> = config
+        .power_user
         .workflows
         .iter()
         .map(|wf| WorkflowInfo {
@@ -88,6 +90,8 @@ pub async fn get_config(State(state): State<AppState>) -> Json<ConfigResponse> {
 
     // Map scripts from config
     let scripts: Vec<ScriptInfo> = config
+        .power_user
+        .scripts
         .scripts
         .iter()
         .map(|s| ScriptInfo {
@@ -99,14 +103,51 @@ pub async fn get_config(State(state): State<AppState>) -> Json<ConfigResponse> {
         })
         .collect();
 
+    let vosk_settings = config
+        .power_user
+        .plugins
+        .settings
+        .get("vosk")
+        .cloned()
+        .unwrap_or_default();
     let settings = SettingsInfo {
-        vosk_model_path: config.power_user.plugins.settings.vosk_model_path.clone(),
-        sample_rate: config.power_user.plugins.settings.sample_rate,
-        audio_device: config.power_user.plugins.settings.audio_device.clone(),
-        web_server_port: config.power_user.plugins.settings.web_server_port,
-        enable_tts: config.power_user.plugins.settings.enable_tts,
-        enable_webrtc: config.power_user.plugins.settings.enable_webrtc,
-        tailscale_enabled: config.power_user.plugins.settings.tailscale_enabled,
+        vosk_model_path: vosk_settings
+            .get("model_path")
+            .unwrap_or(&"".to_string())
+            .clone(),
+        sample_rate: vosk_settings
+            .get("sample_rate")
+            .unwrap_or(&"16000".to_string())
+            .parse()
+            .unwrap_or(16000.0),
+        audio_device: vosk_settings.get("audio_device").cloned(),
+        web_server_port: config
+            .power_user
+            .plugins
+            .settings
+            .get("web")
+            .unwrap_or(&std::collections::HashMap::new())
+            .get("server_port")
+            .unwrap_or(&"8080".to_string())
+            .parse()
+            .unwrap_or(8080),
+        enable_tts: vosk_settings
+            .get("enable_tts")
+            .unwrap_or(&"false".to_string())
+            == "true",
+        enable_webrtc: vosk_settings
+            .get("enable_webrtc")
+            .unwrap_or(&"false".to_string())
+            == "true",
+        tailscale_enabled: config
+            .power_user
+            .plugins
+            .settings
+            .get("tailscale")
+            .unwrap_or(&std::collections::HashMap::new())
+            .get("enabled")
+            .unwrap_or(&"false".to_string())
+            == "true",
     };
 
     Json(ConfigResponse {
@@ -136,14 +177,20 @@ pub async fn update_config(
     let mut config = state.config.write().await;
 
     if let Some(settings) = request.settings {
+        let vosk_settings = config
+            .power_user
+            .plugins
+            .settings
+            .entry("vosk".to_string())
+            .or_insert_with(std::collections::HashMap::new);
         if let Some(path) = settings.vosk_model_path {
-            config.power_user.plugins.settings.vosk_model_path = path;
+            vosk_settings.insert("model_path".to_string(), path);
         }
         if let Some(rate) = settings.sample_rate {
-            config.power_user.plugins.settings.sample_rate = rate;
+            vosk_settings.insert("sample_rate".to_string(), rate.to_string());
         }
         if let Some(tts) = settings.enable_tts {
-            config.power_user.plugins.settings.enable_tts = tts;
+            vosk_settings.insert("enable_tts".to_string(), tts.to_string());
         }
     }
 
@@ -165,11 +212,35 @@ pub struct TailscaleStatus {
 pub async fn get_tailscale_status(State(state): State<AppState>) -> Json<TailscaleStatus> {
     let config = state.config.read().await;
 
+    let tailscale_settings = config
+        .power_user
+        .plugins
+        .settings
+        .get("tailscale")
+        .cloned()
+        .unwrap_or_default();
+    let web_settings = config
+        .power_user
+        .plugins
+        .settings
+        .get("web")
+        .cloned()
+        .unwrap_or_default();
     Json(TailscaleStatus {
-        enabled: config.power_user.plugins.settings.tailscale_enabled,
-        connected: config.power_user.plugins.settings.tailscale_enabled,
-        hostname: config.power_user.plugins.settings.tailscale_hostname.clone(),
-        port: config.power_user.plugins.settings.web_server_port,
+        enabled: tailscale_settings
+            .get("enabled")
+            .unwrap_or(&"false".to_string())
+            == "true",
+        connected: tailscale_settings
+            .get("enabled")
+            .unwrap_or(&"false".to_string())
+            == "true",
+        hostname: tailscale_settings.get("hostname").cloned(),
+        port: web_settings
+            .get("server_port")
+            .unwrap_or(&"8080".to_string())
+            .parse()
+            .unwrap_or(8080),
         error: None,
     })
 }
@@ -187,12 +258,24 @@ pub async fn update_tailscale_config(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    config.power_user.plugins.settings.tailscale_enabled = request.enabled;
+    let tailscale_settings = config
+        .power_user
+        .plugins
+        .settings
+        .entry("tailscale".to_string())
+        .or_insert_with(std::collections::HashMap::new);
+    tailscale_settings.insert("enabled".to_string(), request.enabled.to_string());
     if let Some(hostname) = request.hostname {
-        config.power_user.plugins.settings.tailscale_hostname = Some(hostname);
+        tailscale_settings.insert("hostname".to_string(), hostname);
     }
+    let web_settings = config
+        .power_user
+        .plugins
+        .settings
+        .entry("web".to_string())
+        .or_insert_with(std::collections::HashMap::new);
     if let Some(port) = request.port {
-        config.power_user.plugins.settings.web_server_port = port;
+        web_settings.insert("server_port".to_string(), port.to_string());
     }
 
     Ok(Json(json!({
@@ -242,7 +325,9 @@ pub async fn create_command(
     config.power_user.commands.push(command);
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -259,6 +344,7 @@ pub async fn update_command(
     let mut config = state.config.write().await;
 
     let command = config
+        .power_user
         .commands
         .iter_mut()
         .find(|c| c.id == id)
@@ -278,7 +364,9 @@ pub async fn update_command(
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -300,7 +388,9 @@ pub async fn delete_command(
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -324,6 +414,7 @@ pub async fn get_command(
     let config = state.config.read().await;
 
     let command = config
+        .power_user
         .commands
         .iter()
         .find(|c| c.id == id)
@@ -372,7 +463,9 @@ pub async fn create_workflow(
     config.power_user.workflows.push(workflow);
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -389,6 +482,7 @@ pub async fn update_workflow(
     let mut config = state.config.write().await;
 
     let workflow = config
+        .power_user
         .workflows
         .iter_mut()
         .find(|w| w.id == id)
@@ -405,7 +499,9 @@ pub async fn update_workflow(
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -427,7 +523,9 @@ pub async fn delete_workflow(
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -451,6 +549,7 @@ pub async fn get_workflow(
     let config = state.config.read().await;
 
     let workflow = config
+        .power_user
         .workflows
         .iter()
         .find(|w| w.id == id)
@@ -494,7 +593,7 @@ pub async fn create_script(
         _ => shared::types::ScriptType::Bash,
     };
 
-    let script = infrastructure::config::ScriptConfig {
+    let script = infrastructure::config::Script {
         id: uuid::Uuid::new_v4().to_string(),
         name: request.name,
         script_type,
@@ -504,10 +603,12 @@ pub async fn create_script(
     };
 
     let id = script.id.clone();
-    config.power_user.scripts.push(script);
+    config.power_user.scripts.scripts.push(script);
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -524,6 +625,8 @@ pub async fn update_script(
     let mut config = state.config.write().await;
 
     let script = config
+        .power_user
+        .scripts
         .scripts
         .iter_mut()
         .find(|s| s.id == id)
@@ -540,7 +643,9 @@ pub async fn update_script(
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -554,15 +659,17 @@ pub async fn delete_script(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    let initial_len = config.power_user.scripts.len();
-    config.power_user.scripts.retain(|s| s.id != id);
+    let initial_len = config.power_user.scripts.scripts.len();
+    config.power_user.scripts.scripts.retain(|s| s.id != id);
 
-    if config.power_user.scripts.len() == initial_len {
+    if config.power_user.scripts.scripts.len() == initial_len {
         return Err(StatusCode::NOT_FOUND);
     }
 
     // Save to file
-    let _ = config.power_user.save_to_file("config/system.json");
+    let _ = config
+        .power_user
+        .save_to_file(&std::path::PathBuf::from("config/system.json"));
 
     Ok(Json(json!({
         "status": "ok",
@@ -575,7 +682,7 @@ pub async fn list_scripts(State(state): State<AppState>) -> Result<Json<Value>, 
 
     Ok(Json(json!({
         "status": "ok",
-        "scripts": config.power_user.scripts
+        "scripts": config.power_user.scripts.scripts
     })))
 }
 
@@ -586,6 +693,8 @@ pub async fn get_script(
     let config = state.config.read().await;
 
     let script = config
+        .power_user
+        .scripts
         .scripts
         .iter()
         .find(|s| s.id == id)

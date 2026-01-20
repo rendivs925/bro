@@ -133,9 +133,7 @@ pub fn display_code_with_syntax(lines: &[&str], start_line: usize, ext: &str) {
                     || line.contains("</footer>")
                 {
                     line.bright_green().to_string()
-                } else if line.contains("class=")
-                    || line.contains("href=")
-                    || line.contains("src=")
+                } else if line.contains("class=") || line.contains("href=") || line.contains("src=")
                 {
                     line.bright_yellow().to_string()
                 } else {
@@ -180,7 +178,11 @@ pub fn display_chain_of_thought(reasoning: &str) {
         .collect();
 
     for (i, line) in lines.iter().enumerate() {
-        let marker = if i == lines.len() - 1 { "└─" } else { "├─" };
+        let marker = if i == lines.len() - 1 {
+            "└─"
+        } else {
+            "├─"
+        };
         println!("  {} {}", marker, line.trim().bright_white());
     }
 }

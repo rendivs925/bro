@@ -10,9 +10,9 @@ pub mod handlers;
 pub mod routes;
 pub mod state;
 
+use anyhow::Result;
 use application::voice_command_processor::VoiceCommandProcessor;
 use infrastructure::config::Config;
-use anyhow::Result;
 use state::AppState;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -23,20 +23,33 @@ pub struct AxumServer {
 }
 
 impl AxumServer {
-    pub fn new(
-        voice_processor: Arc<VoiceCommandProcessor>,
-        config: Config,
-    ) -> Self {
+    pub fn new(voice_processor: Arc<VoiceCommandProcessor>, config: Config) -> Self {
         Self {
-            state: AppState::new(voice_processor, config),
+            state: AppState::new(Some(voice_processor), config),
         }
     }
 
     pub async fn run(self, port: u16) -> Result<()> {
         let config = self.state.config.read().await;
 
-        let addr = if config.power_user.plugins.settings.tailscale_enabled {
-            if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
+        let tailscale_enabled = config
+            .power_user
+            .plugins
+            .settings
+            .get("tailscale")
+            .unwrap_or(&std::collections::HashMap::new())
+            .get("enabled")
+            .unwrap_or(&"false".to_string())
+            == "true";
+        let web_settings = config
+            .power_user
+            .plugins
+            .settings
+            .get("web")
+            .cloned()
+            .unwrap_or_default();
+        let addr = if tailscale_enabled {
+            if let Some(bind_addr) = web_settings.get("server_bind") {
                 parse_bind_address(bind_addr)?
             } else {
                 SocketAddr::from(([127, 0, 0, 1], port))
@@ -64,7 +77,7 @@ impl AxumServer {
 }
 
 fn parse_bind_address(bind_addr: &str) -> Result<SocketAddr> {
-    bind_addr.parse().map_err(|_| {
-        anyhow::anyhow!("Invalid bind address: {}", bind_addr)
-    })
+    bind_addr
+        .parse()
+        .map_err(|_| anyhow::anyhow!("Invalid bind address: {}", bind_addr))
 }

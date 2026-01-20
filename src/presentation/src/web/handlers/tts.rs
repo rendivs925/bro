@@ -9,7 +9,7 @@ use axum::{
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::web::state::AppState;
 
@@ -26,7 +26,7 @@ pub async fn speak(
     if request.text.trim().is_empty() {
         return Ok((
             StatusCode::BAD_REQUEST,
-            Json(json!({
+            Json(serde_json::json!({
                 "error": "Text cannot be empty"
             })),
         )
@@ -35,8 +35,9 @@ pub async fn speak(
 
     match state
         .voice_processor
-        .text_to_speech
-        .synthesize(&request.text, request.voice.as_deref())
+        .as_ref()
+        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
+        .synthesize_speech(&request.text, request.voice.as_deref())
         .await
     {
         Ok(samples) => {
@@ -53,7 +54,7 @@ pub async fn speak(
             tracing::error!("TTS synthesis failed: {}", e);
             Ok((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({
+                Json(serde_json::json!({
                     "error": format!("TTS synthesis failed: {}", e)
                 })),
             )
@@ -71,12 +72,11 @@ pub async fn test_voice(
     State(state): State<AppState>,
     Json(request): Json<TestVoiceRequest>,
 ) -> Json<Value> {
-    let available_commands = state
-        .voice_processor
-        .command_interpreter
-        .get_available_commands()
-        .await
-        .unwrap_or_default();
+    let available_commands = if let Some(vp) = &state.voice_processor {
+        vp.get_available_commands().await.unwrap_or_default()
+    } else {
+        Vec::new()
+    };
 
     let text_lower = request.text.to_lowercase();
     let matched_commands: Vec<String> = available_commands
@@ -91,25 +91,24 @@ pub async fn test_voice(
         .collect();
 
     // Test TTS by synthesizing longer text to ensure it works with complex sentences
-    let (tts_available, audio_data) = match state
-        .voice_processor
-        .text_to_speech
-        .synthesize(&request.text, None)
-        .await
-    {
-        Ok(audio_samples) => {
-            // Check that we got a reasonable amount of audio data for the text length
-            let expected_min_samples = request.text.len() * 1000; // Rough estimate: ~1000 samples per character
-            let is_available = audio_samples.len() > expected_min_samples;
+    let (tts_available, audio_data) = if let Some(vp) = &state.voice_processor {
+        match vp.synthesize_speech(&request.text, None).await {
+            Ok(audio_samples) => {
+                // Check that we got a reasonable amount of audio data for the text length
+                let expected_min_samples = request.text.len() * 1000; // Rough estimate: ~1000 samples per character
+                let is_available = audio_samples.len() > expected_min_samples;
 
-            // Convert i16 samples to WAV format for web playback
-            let wav_data = create_wav_from_samples(&audio_samples);
-            (is_available, Some(wav_data))
+                // Convert i16 samples to WAV format for web playback
+                let wav_data = create_wav_from_samples(&audio_samples);
+                (is_available, Some(wav_data))
+            }
+            Err(e) => {
+                tracing::error!("TTS synthesis failed: {}", e);
+                (false, None)
+            }
         }
-        Err(e) => {
-            tracing::error!("TTS synthesis failed: {}", e);
-            (false, None)
-        }
+    } else {
+        (false, None)
     };
 
     let audio_url = if let Some(audio_data) = audio_data {
@@ -120,7 +119,7 @@ pub async fn test_voice(
         None
     };
 
-    Json(json!({
+    Json(serde_json::json!({
         "status": "ok",
         "text": request.text,
         "processed": true,
@@ -146,30 +145,34 @@ pub async fn process_voice_command(
 ) -> Json<Value> {
     let confidence = request.confidence.unwrap_or(0.8);
 
-    match state
-        .voice_processor
-        .process_text_command(request.text.clone(), confidence as f64)
-        .await
-    {
-        Ok(result) => Json(json!({
-            "status": "success",
-            "text": request.text,
-            "processed": true,
-            "success": result.success,
-            "recognized_text": result.recognized_text,
-            "command_executed": result.command_executed,
-            "execution_result": result.execution_result
-        })),
-        Err(e) => {
-            tracing::error!("Voice command processing failed: {}", e);
-            Json(json!({
-                "status": "error",
+    if let Some(vp) = &state.voice_processor {
+        match vp
+            .process_text_command(request.text.clone(), confidence as f64)
+            .await
+        {
+            Ok(result) => Json(serde_json::json!({
+                "status": "success",
                 "text": request.text,
-                "processed": false,
-                "success": false,
-                "error": format!("Failed to process voice command: {}", e)
-            }))
+                "processed": true,
+                "success": result.success,
+                "recognized_text": result.recognized_text,
+                "command_executed": result.command_executed,
+                "execution_result": result.execution_result
+            })),
+            Err(e) => {
+                tracing::error!("Voice command processing failed: {}", e);
+                let error_msg = format!("Failed to process voice command: {}", e);
+                Json(serde_json::json!({
+                    "status": "error",
+                    "text": request.text,
+                    "processed": false,
+                    "success": false,
+                    "error": error_msg
+                }))
+            }
         }
+    } else {
+        Json(serde_json::json!({"error": "Voice processor not available"}))
     }
 }
 

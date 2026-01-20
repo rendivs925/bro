@@ -67,6 +67,7 @@ sled = "0.34"
  tower-http = { version = "0.5", features = ["fs", "cors", "trace"] }
  hyper = { version = "1.0", features = ["full"] }
  uuid = { version = "1.8", features = ["v4"] }
- tracing = "0.1"
- tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+  tracing = "0.1"
+  tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+  evdev = "0.12"
 

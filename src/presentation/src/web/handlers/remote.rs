@@ -29,11 +29,7 @@ pub async fn execute_remote_command(
     tracing::info!("Executing remote command: {}", request.command);
 
     // Execute command securely
-    match Command::new("sh")
-        .arg("-c")
-        .arg(&request.command)
-        .output()
-    {
+    match Command::new("sh").arg("-c").arg(&request.command).output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
@@ -43,7 +39,11 @@ pub async fn execute_remote_command(
                     status: "ok".to_string(),
                     command: request.command,
                     result: Some(stdout),
-                    error: if stderr.is_empty() { None } else { Some(stderr) },
+                    error: if stderr.is_empty() {
+                        None
+                    } else {
+                        Some(stderr)
+                    },
                     processed: true,
                 }))
             } else {
@@ -88,46 +88,38 @@ pub async fn handle_mouse_event(
 
     // Use xdotool for mouse control on Linux
     let result = match request.event_type.as_str() {
-        "move" => {
-            Command::new("xdotool")
-                .args(["mousemove", &request.x.to_string(), &request.y.to_string()])
-                .output()
-        }
-        "click" | "left_click" => {
-            Command::new("xdotool")
-                .args([
-                    "mousemove",
-                    &request.x.to_string(),
-                    &request.y.to_string(),
-                    "click",
-                    "1",
-                ])
-                .output()
-        }
-        "right_click" => {
-            Command::new("xdotool")
-                .args([
-                    "mousemove",
-                    &request.x.to_string(),
-                    &request.y.to_string(),
-                    "click",
-                    "3",
-                ])
-                .output()
-        }
-        "double_click" => {
-            Command::new("xdotool")
-                .args([
-                    "mousemove",
-                    &request.x.to_string(),
-                    &request.y.to_string(),
-                    "click",
-                    "--repeat",
-                    "2",
-                    "1",
-                ])
-                .output()
-        }
+        "move" => Command::new("xdotool")
+            .args(["mousemove", &request.x.to_string(), &request.y.to_string()])
+            .output(),
+        "click" | "left_click" => Command::new("xdotool")
+            .args([
+                "mousemove",
+                &request.x.to_string(),
+                &request.y.to_string(),
+                "click",
+                "1",
+            ])
+            .output(),
+        "right_click" => Command::new("xdotool")
+            .args([
+                "mousemove",
+                &request.x.to_string(),
+                &request.y.to_string(),
+                "click",
+                "3",
+            ])
+            .output(),
+        "double_click" => Command::new("xdotool")
+            .args([
+                "mousemove",
+                &request.x.to_string(),
+                &request.y.to_string(),
+                "click",
+                "--repeat",
+                "2",
+                "1",
+            ])
+            .output(),
         _ => {
             return Json(json!({
                 "status": "error",

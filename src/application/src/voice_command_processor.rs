@@ -360,4 +360,16 @@ impl VoiceCommandProcessor {
     pub async fn get_available_commands(&self) -> Result<Vec<String>> {
         self.command_interpreter.get_available_commands().await
     }
+
+    pub async fn synthesize_speech(&self, text: &str, voice: Option<&str>) -> Result<Vec<i16>> {
+        self.text_to_speech.synthesize(text, voice).await
+    }
+}
+
+impl Default for VoiceCommandProcessor {
+    fn default() -> Self {
+        unimplemented!(
+            "VoiceCommandProcessor cannot be created with default, use new() with services"
+        )
+    }
 }

@@ -59,16 +59,17 @@ impl VoiceHandler {
         ];
 
         // Try to find Vosk model
+        let home_model_path = format!(
+            "{}/.local/share/vosk/model",
+            std::env::var("HOME").unwrap_or_default()
+        );
         let model_paths = vec![
             "model/vosk-model-en-us-0.22",
             "model/vosk-model-small-en-us-0.15",
             "models/vosk-model-en-us-0.22",
             "models/vosk-model-small-en-us-0.15",
             "/usr/share/vosk/model",
-            &format!(
-                "{}/.local/share/vosk/model",
-                std::env::var("HOME").unwrap_or_default()
-            ),
+            &home_model_path,
         ];
 
         let mut speech_recognizer = None;
@@ -135,7 +136,9 @@ impl VoiceHandler {
 
         // Speak welcome message if TTS available
         if let Some(ref tts) = self.tts_engine {
-            let _ = self.speak(tts, "Voice mode active. Say bro followed by your command.").await;
+            let _ = self
+                .speak(tts, "Voice mode active. Say bro followed by your command.")
+                .await;
         }
 
         self.is_listening = true;
@@ -153,10 +156,7 @@ impl VoiceHandler {
         // Main voice processing loop
         while self.is_listening {
             // Wait for audio with timeout
-            match tokio::time::timeout(
-                tokio::time::Duration::from_secs(30),
-                rx.recv()
-            ).await {
+            match tokio::time::timeout(tokio::time::Duration::from_secs(30), rx.recv()).await {
                 Ok(Some(audio_chunk)) => {
                     if let Err(e) = self.process_audio_chunk(audio_chunk).await {
                         eprintln!("Voice processing error: {}", e);
@@ -185,8 +185,8 @@ impl VoiceHandler {
 
     /// Process an audio chunk for voice commands
     async fn process_audio_chunk(&mut self, audio_chunk: Vec<i16>) -> Result<bool> {
-        use domain::entities::recognition_session::AudioSample;
         use domain::services::SpeechRecognitionService;
+        use shared::types::AudioSample;
 
         // Skip very short audio chunks
         if audio_chunk.len() < 1600 {
@@ -276,7 +276,7 @@ Response:"#,
             command
         );
 
-        let response = self.ollama_client.generate(&prompt).await?;
+        let response = self.ollama_client.generate_response(&prompt).await?;
         Ok(response.trim().to_string())
     }
 
@@ -289,7 +289,7 @@ Response:"#,
 
         // Play the audio
         let player = AudioPlayer::new()?;
-        player.play_samples(&samples, 22050)?;
+        player.play_pcm_data(&samples, 22050).await?;
 
         Ok(())
     }

@@ -1,0 +1,4056 @@
+warning: /home/rendi/projects/bro/Cargo.toml: unused manifest key: workspace.package.name
+warning: /home/rendi/projects/bro/Cargo.toml: unused manifest key: workspace.package.name
+warning: unused doc comment
+   --> src/shared/src/performance_monitor.rs:121:1
+    |
+warning: unused doc comment
+   --> src/shared/src/performance_monitor.rs:121:1
+    |
+121 | /// Global performance metrics instance
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` on by default
+
+warning: unused variable: `color`
+  --> src/shared/src/confirmation.rs:82:21
+   121 | /// Global performance metrics instance
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` on by default
+
+warning: unused variable: `color`
+  --> src/shared/src/confirmation.rs:82:21
+   |
+82 | |
+82 |     let (selection, color) = match result {
+   |                     ^^^^^    let (selection, color) = match result {
+   |                     ^^^^^ help: if this is intentional, prefix it with an underscore: `_color`
+   | help: if this is intentional, prefix it with an underscore: `_color`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+   = note: `#[warn(unused_variables)]` on by default
+
+
+
+warning: field `batch_size` is never read
+   --> src/shared/src/batch_processing.rs:104:5
+    warning: field `batch_size` is never read
+   --> src/shared/src/batch_processing.rs:104:5
+    |
+103 | pub struct FileBatchProcessor {|
+103 | pub struct FileBatchProcessor {
+    |            ------------------ 
+    |            ------------------ field in this struct
+104 |field in this struct
+104 |     batch_size: usize,
+    |          batch_size: usize,
+    |     ^^^^^^^^^^
+    |
+^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+    = note: `#[warn(dead_code)]` on by default
+
+
+warning: field `capacity` is never read
+   --> src/shared/src/memory_pool.rs:264:5warning: field `capacity` is never read
+   --> src/shared/src/memory_pool.rs:264:5
+    |
+262 |
+    |
+262 | pub struct CollectionBuilder<T> {
+    |             pub struct CollectionBuilder<T> {
+    |            ----------------- field in this struct
+263 ----------------- field in this struct
+263 |     items: Vec<T>,
+264 |     items: Vec<T>,
+264 |     capacity: usize,
+    |     capacity: usize,
+    |     ^^^^^^^^
+
+|     ^^^^^^^^
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/shared/src/memory_pool.rs:208:17warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/shared/src/memory_pool.rs:208:17
+    |
+208 |
+    |
+208 |     pub fn iter(&self) -> SmallVecIter<T, N> {
+    |                      pub fn iter(&self) -> SmallVecIter<T, N> {
+    |                 ^^^^^     ------------------ the same lifetime is hidden here^^^^^     ------------------ the same lifetime is hidden here
+    |                 |
+
+    |                 |
+    |                 the lifetime is elided here
+    |                 the lifetime is elided here
+    |
+    = help    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    : `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+208 |     pub fn iter(&self) -> SmallVecIter<|
+208 |     pub fn iter(&self) -> SmallVecIter<'_, T, N> {
+    |'_, T, N> {
+    |                                        +++
+
+                                        +++
+
+warning: `shared` (lib) generated 5 warnings
+warning: `shared` (lib) generated 5 warnings
+warning: unused variable: `variables`
+   --> warning: unused variable: `variables`
+   --> src/domain/src/services/workflow_executor.rs:287:9
+    |
+287 |         variables: &HashMap<String, VariableValue>,
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variables`
+    |
+    = note: `#[warn(unused_variables)]` on by defaultsrc/domain/src/services/workflow_executor.rs:287:9
+    |
+287 |         variables: &HashMap<String, VariableValue>,
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variables`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+
+
+warning: unused variable: `variables`
+   warning: unused variable: `variables`
+   --> src/domain/src/services/workflow_executor.rs:303:9
+    |
+--> src/domain/src/services/workflow_executor.rs:303:9
+    |
+303 |         variables: &HashMap<String, VariableValue>,
+303 |         variables: &HashMap<String, VariableValue>,
+    |         ^^^^^^^^^     |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variables`
+
+help: if this is intentional, prefix it with an underscore: `_variables`
+
+warning: unused variable: `session_id`
+   --> src/domain/src/services/browser_automation.rs:190:38
+    |
+warning: unused variable: `session_id`
+   --> src/domain/src/services/browser_automation.rs:190:38
+    |
+190 |     async fn get_page_content(&self, session_id: &str) -> Result<String> {
+190 |     async fn get_page_content(&self, session_id: &str) -> Result<String> {
+    |                                      ^^^^^^^^^^     |                                      ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_session_id`
+
+help: if this is intentional, prefix it with an underscore: `_session_id`
+
+warning: unused variable: `session_id`
+   --> warning: unused variable: `session_id`
+   --> src/domain/src/services/browser_automation.rs:196:37
+    |
+196src/domain/src/services/browser_automation.rs:196:37
+    |
+196 |     async fn take_screenshot(&self, session_id: &str, path: &str) -> Result<()> {
+     |     async fn take_screenshot(&self, session_id: &str, path: &str) -> Result<()> {
+    |                                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_session_id`
+|                                     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_session_id`
+
+
+warning: field `browser_service` is never read
+  --> src/domain/src/services/workflow_executor.rs:36:5warning: field `browser_service` is never read
+  --> src/domain/src/services/workflow_executor.rs:36:5
+   |
+34 |
+   |
+34 | pub struct DefaultWorkflowExecutor {
+   | pub struct DefaultWorkflowExecutor {
+   |            ----------------------- field in this struct
+            ----------------------- field in this struct
+35 |     script_executor: Arc<ScriptExecutor>,
+35 |     script_executor: Arc<ScriptExecutor>,
+36 |     browser_service: Arc<dyn BrowserAutomationService>,36 |     browser_service: Arc<dyn BrowserAutomationService>,
+   |     ^^^^^^^^^^^^^^^
+
+   |     ^^^^^^^^^^^^^^^
+      |
+   = note|
+   = note: `#[warn(dead_code)]` on by default
+
+: `#[warn(dead_code)]` on by default
+
+warning: `domain` (lib) generated 5 warnings
+warning: `domain` (lib) generated 5 warnings
+warning: unused import: `webrtc::track::track_local::track_local_static_rtp::TrackLocalStaticRTP`
+  --> warning: unused import: `webrtc::track::track_local::track_local_static_rtp::TrackLocalStaticRTP`
+  --> src/infrastructure/src/adapters/screen/sharing.rs:11:5
+   |
+11src/infrastructure/src/adapters/screen/sharing.rs:11:5
+   |
+11 | use webrtc::track::track_local::track_local_static_rtp::TrackLocalStaticRTP;
+ | use webrtc::track::track_local::track_local_static_rtp::TrackLocalStaticRTP;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note   |
+   = note: `#[warn(unused_imports)]` on by default
+
+: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `ErrorContext`
+ --> src/infrastructure/src/background_supervisor.rs:2:44warning: unused import: `ErrorContext`
+ --> src/infrastructure/src/background_supervisor.rs:2:44
+  |
+2 | use crate::error_analyzer::{ErrorAnalyzer, ErrorContext};
+  |                                            
+  |
+2 | use crate::error_analyzer::{ErrorAnalyzer, ErrorContext};
+  |                                            ^^^^^^^^^^^^
+
+^^^^^^^^^^^^
+
+warning: unused import: `FixConfidence`
+ --> src/infrastructure/src/background_supervisor.rs:3:38
+  warning: unused import: `FixConfidence`
+ --> src/infrastructure/src/background_supervisor.rs:3:38
+  |
+3 | use crate::fix_applier::{FixApplier, FixConfidence};|
+3 | use crate::fix_applier::{FixApplier, FixConfidence};
+  |                                      ^^^^^^^^^^^^^
+  |                                      ^^^^^^^^^^^^^
+
+
+
+warning: unused import: `ToolError`
+ --> warning: unused import: `ToolError`
+ --> src/infrastructure/src/command_interpreter.rs:1:30
+  |
+1src/infrastructure/src/command_interpreter.rs:1:30
+  |
+1 | use crate::tools::{ToolArgs, ToolError, ToolOutput, ToolRegistry};
+   | use crate::tools::{ToolArgs, ToolError, ToolOutput, ToolRegistry};
+  |                              ^^^^^^^^^
+
+|                              ^^^^^^^^^
+
+warning: unused doc comment
+   --> warning: unused doc comment
+   --> src/infrastructure/src/feature_flags.rs:518:1
+    |
+518src/infrastructure/src/feature_flags.rs:518:1
+    |
+518 | /// Global feature flag manager
+     | /// Global feature flag manager
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` on by default
+
+note: `#[warn(unused_doc_comments)]` on by default
+
+warning: unused import: `memmap2::Mmap`
+ --> warning: unused import: `memmap2::Mmap`
+ --> src/infrastructure/src/file_scanner.rs:3:5
+  |
+3src/infrastructure/src/file_scanner.rs:3:5
+  |
+3 | use memmap2::Mmap;
+   | use memmap2::Mmap;
+  |     ^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^
+
+warning: unused import: `std::fs::File`
+ --> warning: unused import: `std::fs::File`
+ --> src/infrastructure/src/file_scanner.rs:8:5
+  |
+8src/infrastructure/src/file_scanner.rs:8:5
+  |
+8 | use std::fs::File;
+   | use std::fs::File;
+  |     ^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^
+
+warning: unused import: `futures::future::join_all`
+  --> warning: unused import: `futures::future::join_all`
+  --> src/infrastructure/src/file_scanner.rs:55:13
+   |
+55src/infrastructure/src/file_scanner.rs:55:13
+   |
+55 |         use futures::future::join_all;
+    |         use futures::future::join_all;
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+|             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused doc comment
+   --> warning: unused doc comment
+   --> src/infrastructure/src/observability.rs:983:1
+    |
+983src/infrastructure/src/observability.rs:983:1
+    |
+983 | /// Global observability instance
+     | /// Global observability instance
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations| ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = 
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unused variable: `stream_cfg`
+   --> warning: unused variable: `stream_cfg`
+   --> src/infrastructure/src/adapters/audio_player.rs:140:13
+    |
+140src/infrastructure/src/adapters/audio_player.rs:140:13
+    |
+140 |         let stream_cfg: cpal::StreamConfig = cfg.clone().into();
+     |         let stream_cfg: cpal::StreamConfig = cfg.clone().into();
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_stream_cfg`|             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_stream_cfg`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `parameters`
+warning: unused variable: `parameters`
+  --> src/infrastructure/src/adapters/screen/remote_control.rs:19:9
+     --> src/infrastructure/src/adapters/screen/remote_control.rs:19:9
+   |
+19 | |
+19 |         parameters: Option<&serde_json::Value>,
+   |                 parameters: Option<&serde_json::Value>,
+   |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_parameters`
+
+^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_parameters`
+
+warning: unused variable: `track`
+   --> warning: unused variable: `track`
+   --> src/infrastructure/src/adapters/screen/sharing.rs:109:49
+    |
+109 src/infrastructure/src/adapters/screen/sharing.rs:109:49
+    |
+109 |         peer_connection.on_track(Box::new(move |track: Arc<TrackRemote>, _receiver, _| {
+    |         peer_connection.on_track(Box::new(move |track: Arc<TrackRemote>, _receiver, _| {
+    |                                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_track`|                                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_track`
+
+
+
+warning: variable `last_result` is assigned to, but never used
+   --> warning: variable `last_result` is assigned to, but never used
+   --> src/infrastructure/src/agent_control.rs:254:17
+    |
+254src/infrastructure/src/agent_control.rs:254:17
+    |
+254 |         let mut last_result: Option<AgentIterationResult> = None;
+     |         let mut last_result: Option<AgentIterationResult> = None;
+    |                 ^^^^^^^^^^^
+    |                 ^^^^^^^^^^^
+    |
+    = note: consider using `_last_result` instead|
+    = note: consider using `_last_result` instead
+
+
+
+warning: value assigned to `last_result` is never read
+   warning: value assigned to `last_result` is never read
+   --> src/infrastructure/src/agent_control.rs:410:21
+    |
+--> src/infrastructure/src/agent_control.rs:410:21
+    |
+410 |                     last_result = Some(iteration_result);
+410 |                     last_result = Some(iteration_result);
+    |                     ^^^^^^^^^^^
+    |                     ^^^^^^^^^^^
+    |
+    = help    |
+    = help: maybe it is overwritten before being read?
+    = note: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+: `#[warn(unused_assignments)]` on by default
+
+warning: variable `last_result` is assigned to, but never used
+   --> warning: variable `last_result` is assigned to, but never used
+   --> src/infrastructure/src/agent_control.rs:495:17
+    |
+495src/infrastructure/src/agent_control.rs:495:17
+    |
+495 |         let mut last_result: Option<AgentIterationResult> = None;
+     |         let mut last_result: Option<AgentIterationResult> = None;
+    |                 ^^^^^^^^^^^
+    |                 ^^^^^^^^^^^
+    |
+    = note: consider using `_last_result` instead|
+    = note: consider using `_last_result` instead
+
+
+
+warning: value assigned to `last_result` is never read
+   warning: value assigned to `last_result` is never read
+   --> src/infrastructure/src/agent_control.rs:654:21
+    |
+--> src/infrastructure/src/agent_control.rs:654:21
+    |
+654 |                     last_result = Some(iteration_result);654 |                     last_result = Some(iteration_result);
+    |                     ^^^^^^^^^^^
+
+    |                     ^^^^^^^^^^^
+    |
+    =     |
+    = help: maybe it is overwritten before being read?
+
+help: maybe it is overwritten before being read?
+
+warning: unused variable: `prompt`
+   --> warning: unused variable: `prompt`
+   --> src/infrastructure/src/chatgpt_browser.rs:339:43
+    |
+339src/infrastructure/src/chatgpt_browser.rs:339:43
+    |
+339 |     async fn query_with_playwright(&self, prompt: &str) -> Result<BrowserResult> {
+     |     async fn query_with_playwright(&self, prompt: &str) -> Result<BrowserResult> {
+    |                                           ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+|                                           ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: unused variable: `browser`
+   warning: unused variable: `browser`
+   --> src/infrastructure/src/chatgpt_browser.rs:349:55
+    |
+--> src/infrastructure/src/chatgpt_browser.rs:349:55
+    |
+349 |     async fn query_with_selenium(&self, prompt: &str, browser: &str) -> Result<BrowserResult> {
+349 |     async fn query_with_selenium(&self, prompt: &str, browser: &str) -> Result<BrowserResult> {
+    |                                                       ^^^^^^^     |                                                       ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_browser`
+
+help: if this is intentional, prefix it with an underscore: `_browser`
+
+warning: unused variable: `prompt`
+   warning: unused variable: `prompt`
+   --> src/infrastructure/src/chatgpt_browser.rs:361:51
+    |
+--> src/infrastructure/src/chatgpt_browser.rs:361:51
+    |
+361 |     async fn query_with_screenshot_capture(&self, prompt: &str) -> Result<BrowserResult> {
+361 |     async fn query_with_screenshot_capture(&self, prompt: &str) -> Result<BrowserResult> {
+    |                                                   ^^^^^^     |                                                   ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: unused variable: `prompt`
+   warning: unused variable: `prompt`
+   --> src/infrastructure/src/chatgpt_browser.rs:461:47
+    |
+--> src/infrastructure/src/chatgpt_browser.rs:461:47
+    |
+461 |     async fn query_with_direct_browser(&self, prompt: &str) -> Result<BrowserResult> {
+461 |     async fn query_with_direct_browser(&self, prompt: &str) -> Result<BrowserResult> {
+    |                                               ^^^^^^     |                                               ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: unused variable: `ocr`
+   --> warning: unused variable: `ocr`
+   --> src/infrastructure/src/chatgpt_browser.rs:561:25
+    |
+561src/infrastructure/src/chatgpt_browser.rs:561:25
+    |
+561 |         if let Some(ref ocr) = self.ocr {
+     |         if let Some(ref ocr) = self.ocr {
+    |                         ^^^ help: if this is intentional, prefix it with an underscore: `_ocr`|                         ^^^ help: if this is intentional, prefix it with an underscore: `_ocr`
+
+
+
+warning: unused variable: `plugin`
+    warning: unused variable: `plugin`
+    --> src/infrastructure/src/config.rs:1219:20
+     |
+--> src/infrastructure/src/config.rs:1219:20
+     |
+1219 |         for (name, plugin) in &self.plugins {
+1219 |         for (name, plugin) in &self.plugins {
+     |                    ^^^^^^      |                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_plugin`
+
+help: if this is intentional, prefix it with an underscore: `_plugin`
+
+warning: unused variable: `plugin_config`
+    --> src/infrastructure/src/config.rs:1220:17warning: unused variable: `plugin_config`
+    --> src/infrastructure/src/config.rs:1220:17
+     |
+1220 |
+     |
+1220 |             let plugin_config = self.config.settings.get(name).cloned().unwrap_or_default();
+     |             let plugin_config = self.config.settings.get(name).cloned().unwrap_or_default();
+     |                 ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_plugin_config`
+
+                 ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_plugin_config`
+
+warning: unused variable: `batch_duration`
+  --> warning: unused variable: `batch_duration`
+  --> src/infrastructure/src/embedder.rs:50:17
+   |
+50src/infrastructure/src/embedder.rs:50:17
+   |
+50 |             let batch_duration = batch_start.elapsed();
+   |                 ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_batch_duration`
+
+ |             let batch_duration = batch_start.elapsed();
+   |                 ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_batch_duration`
+
+warning: unreachable pattern
+   --> src/infrastructure/src/embedder.rs:106:13warning: unreachable pattern
+   --> src/infrastructure/src/embedder.rs:106:13
+    |
+104 
+    |
+104 |             InferenceEngine::Ollama(client) => client.generate_embeddings_pipelined(texts).await?,
+    ||             InferenceEngine::Ollama(client) => client.generate_embeddings_pipelined(texts).await?,
+    |             ------------------------------- matches all the relevant values
+             ------------------------------- matches all the relevant values
+105 |             // Fallback to individual requests for other inference engines
+105 |             // Fallback to individual requests for other inference engines
+106 |             _ => {106 |             _ => {
+    |             ^ 
+    |             ^ no value can reach this
+    |
+    no value can reach this
+    |
+    = note: `#[warn(unreachable_patterns)]` on by default
+
+= note: `#[warn(unreachable_patterns)]` on by default
+
+warning: unreachable statement
+  --> warning: unreachable statement
+  --> src/infrastructure/src/log_tailer.rs:40:9
+   |
+37src/infrastructure/src/log_tailer.rs:40:9
+   |
+37 |         return Ok(());
+    |         return Ok(());
+   |         ------------- any code following this expression is unreachable|         ------------- any code following this expression is unreachable
+...
+40 
+...
+40 |         let mut handles = Vec::new();
+   ||         let mut handles = Vec::new();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unreachable statement
+   |
+   = note   |
+   = note: `#[warn(unreachable_code)]` on by default
+
+: `#[warn(unreachable_code)]` on by default
+
+warning: unused variable: `event_tx`
+  --> warning: unused variable: `event_tx`
+  --> src/infrastructure/src/log_tailer.rs:31:9
+   |
+31 src/infrastructure/src/log_tailer.rs:31:9
+   |
+31 |         event_tx: Sender<super::background_supervisor::BackgroundEvent>,
+   |         event_tx: Sender<super::background_supervisor::BackgroundEvent>,
+   |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_event_tx`|         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_event_tx`
+
+
+
+warning: variable does not need to be mutable
+  --> warning: variable does not need to be mutable
+  --> src/infrastructure/src/log_tailer.rs:30:9
+   |
+30src/infrastructure/src/log_tailer.rs:30:9
+   |
+30 |         mut self,
+    |         mut self,
+   |         ----^^^^
+|         ----^^^^
+   |         |
+      |         |
+   |         help: remove this `mut`
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default|
+   = note: `#[warn(unused_mut)]` on by default
+
+
+
+warning: variable does not need to be mutable
+  --> warning: variable does not need to be mutable
+  --> src/infrastructure/src/ollama_client.rs:97:9
+   |
+97src/infrastructure/src/ollama_client.rs:97:9
+   |
+97 |         mut on_chunk: F,
+    |         mut on_chunk: F,
+   |         ----^^^^^^^^
+|         ----^^^^^^^^
+   |         |
+   |         |
+   |         help: remove this `mut`
+
+   |         help: remove this `mut`
+
+warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> src/infrastructure/src/qdrant_storage.rs:257:74
+    |
+257 src/infrastructure/src/qdrant_storage.rs:257:74
+    |
+257 |                     Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+    |                     Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+    |                                                                          ^^^^^^^^
+    ||                                                                          ^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated field `qdrant_client::qdrant::Vector::data`
+   warning: use of deprecated field `qdrant_client::qdrant::Vector::data`
+   --> src/infrastructure/src/qdrant_storage.rs:172:29
+    |--> src/infrastructure/src/qdrant_storage.rs:172:29
+    |
+172 | 
+172 | ...                   data: embedding.vector,
+    |                       ...                   data: embedding.vector,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> src/infrastructure/src/qdrant_storage.rs:354:74
+    |
+--> src/infrastructure/src/qdrant_storage.rs:354:74
+    |
+354 |                     Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+354 |                     Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+    |                                                                          ^^^^^^^^
+    |                                                                          ^^^^^^^^
+
+
+warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> src/infrastructure/src/qdrant_storage.rs:455:82
+
+   --> src/infrastructure/src/qdrant_storage.rs:455:82
+    |
+455 |    |
+455 | ...                   Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+     ...                   Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+    |                                                                            ^^^^^^^^
+
+|                                                                            ^^^^^^^^
+
+warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> warning: use of deprecated field `qdrant_client::qdrant::VectorOutput::data`
+   --> src/infrastructure/src/qdrant_storage.rs:557:78
+    |
+557src/infrastructure/src/qdrant_storage.rs:557:78
+    |
+557 |                         Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+     |                         Some(vectors_output::VectorsOptions::Vector(vec)) => vec.data.clone(),
+    |                                                                              ^^^^^^^^
+
+|                                                                              ^^^^^^^^
+
+warning: unused variable: `tool_name`
+   --> warning: unused variable: `tool_name`
+   --> src/infrastructure/src/resource_enforcement.rs:277:5
+    |
+277src/infrastructure/src/resource_enforcement.rs:277:5
+    |
+277 |     tool_name: &str,
+     |     tool_name: &str,
+    |     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tool_name`|     ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tool_name`
+
+
+
+warning: unused variable: `cached`
+   --> warning: unused variable: `cached`
+   --> src/infrastructure/src/smart_router.rs:145:25
+    |
+145src/infrastructure/src/smart_router.rs:145:25
+    |
+145 |             if let Some(cached) = self.get_cached_response(query).await? {
+     |             if let Some(cached) = self.get_cached_response(query).await? {
+    |                         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_cached`|                         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_cached`
+
+
+
+warningwarning: unused import: `rayon::prelude`
+ --> src/infrastructure/src/file_scanner.rs:4:5
+: unused import: `rayon::prelude`
+ --> src/infrastructure/src/file_scanner.rs:4:5
+  |
+4   |
+4 | use rayon::prelude::*;
+  || use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+     ^^^^^^^^^^^^^^
+
+warning: unused variable: `used_config`
+   warning: unused variable: `used_config`
+   --> src/infrastructure/src/adapters/microphone.rs:596:22
+    |
+--> src/infrastructure/src/adapters/microphone.rs:596:22
+    |
+596 |         let (stream, used_config) = self.build_input_stream_i16_with_fallback(
+    |                      ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_used_config`
+596 |         let (stream, used_config) = self.build_input_stream_i16_with_fallback(
+    |                      ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_used_config`
+
+
+warning: unused variable: `prompt`
+   warning: unused variable: `prompt`
+   --> src/infrastructure/src/command_interpreter.rs:154:47
+    |
+--> src/infrastructure/src/command_interpreter.rs:154:47
+    |
+154 |                 ParameterExtractor::UserInput(prompt) => {
+154 |                 ParameterExtractor::UserInput(prompt) => {
+    |                                               ^^^^^^     |                                               ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: unused variable: `file_pattern`
+   --> warning: unused variable: `file_pattern`
+   --> src/infrastructure/src/compilation_watcher.rs:113:13
+    |
+113src/infrastructure/src/compilation_watcher.rs:113:13
+    |
+113 |         let file_pattern = Regex::new(r"--> ([^:]+):(\d+):(\d+)").ok()?;
+     |         let file_pattern = Regex::new(r"--> ([^:]+):(\d+):(\d+)").ok()?;
+    |             ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_pattern`|             ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_pattern`
+
+
+
+warning: unused variable: `args`
+    warning: unused variable: `args`
+    --> src/infrastructure/src/config.rs:1463:9
+     |
+--> src/infrastructure/src/config.rs:1463:9
+     |
+1463 |         args: Vec<String>,
+1463 |         args: Vec<String>,
+     |         ^^^^      |         ^^^^ help: if this is intentional, prefix it with an underscore: `_args`
+
+help: if this is intentional, prefix it with an underscore: `_args`
+
+warning: unused variable: `suggestion`
+   warning: unused variable: `suggestion`
+   --> src/infrastructure/src/error_analyzer.rs:180:13
+    |
+--> src/infrastructure/src/error_analyzer.rs:180:13
+    |
+180 |         let suggestion = format!("Add import or define variable `{}`", var_name);
+180 |         let suggestion = format!("Add import or define variable `{}`", var_name);
+    |             ^^^^^^^^^^     |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_suggestion`
+
+help: if this is intentional, prefix it with an underscore: `_suggestion`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:190:33
+    |
+--> src/infrastructure/src/error_analyzer.rs:190:33
+    |
+190 |     fn fix_type_mismatch(&self, error: ErrorContext) -> FixSuggestion {
+190 |     fn fix_type_mismatch(&self, error: ErrorContext) -> FixSuggestion {
+    |                                 ^^^^^     |                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:199:34
+    |
+--> src/infrastructure/src/error_analyzer.rs:199:34
+    |
+199 |     fn fix_borrow_checker(&self, error: ErrorContext) -> FixSuggestion {
+199 |     fn fix_borrow_checker(&self, error: ErrorContext) -> FixSuggestion {
+    |                                  ^^^^^     |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:219:37
+    |
+--> src/infrastructure/src/error_analyzer.rs:219:37
+    |
+219 |     fn fix_assertion_failure(&self, error: ErrorContext) -> FixSuggestion {
+219 |     fn fix_assertion_failure(&self, error: ErrorContext) -> FixSuggestion {
+    |                                     ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+    |                                     ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:230:25
+    |
+--> src/infrastructure/src/error_analyzer.rs:230:25
+    |
+230 |     fn fix_panic(&self, error: ErrorContext) -> FixSuggestion {
+230 |     fn fix_panic(&self, error: ErrorContext) -> FixSuggestion {
+    |                         ^^^^^     |                         ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:239:33warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:239:33
+    |
+239 
+    |
+239 |     fn fix_unused_import(&self, error: ErrorContext) -> FixSuggestion {
+    ||     fn fix_unused_import(&self, error: ErrorContext) -> FixSuggestion {
+    |                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:249:32
+    |
+--> src/infrastructure/src/error_analyzer.rs:249:32
+    |
+249 |     fn fix_missing_docs(&self, error: ErrorContext) -> FixSuggestion {
+249 |     fn fix_missing_docs(&self, error: ErrorContext) -> FixSuggestion {
+    |                                ^^^^^     |                                ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:259:36
+    |
+--> src/infrastructure/src/error_analyzer.rs:259:36
+    |
+259 |     fn fix_connection_error(&self, error: ErrorContext) -> FixSuggestion {
+259 |     fn fix_connection_error(&self, error: ErrorContext) -> FixSuggestion {
+    |                                    ^^^^^     |                                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:270:33
+    |
+--> src/infrastructure/src/error_analyzer.rs:270:33
+    |
+270 |     fn fix_timeout_error(&self, error: ErrorContext) -> FixSuggestion {
+270 |     fn fix_timeout_error(&self, error: ErrorContext) -> FixSuggestion {
+    |                                 ^^^^^     |                                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:279:39
+    |
+--> src/infrastructure/src/error_analyzer.rs:279:39
+    |
+279 |     fn fix_index_out_of_bounds(&self, error: ErrorContext) -> FixSuggestion {
+279 |     fn fix_index_out_of_bounds(&self, error: ErrorContext) -> FixSuggestion {
+    |                                       ^^^^^     |                                       ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `error`
+   warning: unused variable: `error`
+   --> src/infrastructure/src/error_analyzer.rs:288:32
+    |
+--> src/infrastructure/src/error_analyzer.rs:288:32
+    |
+288 |     fn fix_null_pointer(&self, error: ErrorContext) -> FixSuggestion {
+288 |     fn fix_null_pointer(&self, error: ErrorContext) -> FixSuggestion {
+    |                                ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+    |                                ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+
+warning: unused variable: `current_file`
+   warning: unused variable: `current_file`
+   --> src/infrastructure/src/observability.rs:371:21
+    |
+--> src/infrastructure/src/observability.rs:371:21
+    |
+371 |         if let Some(current_file) = self.current_log_file.take() {
+371 |         if let Some(current_file) = self.current_log_file.take() {
+    |                     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_current_file`    |                     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_current_file`
+
+
+
+warning: field `audio_sample_rate` is never read
+  warning: field `audio_sample_rate` is never read
+  --> src/infrastructure/src/adapters/screen/sharing.rs:27:5
+   |
+--> src/infrastructure/src/adapters/screen/sharing.rs:27:5
+   |
+24 | pub struct ScreenSharingManager {
+24 | pub struct ScreenSharingManager {
+   |            --------------------    |            -------------------- field in this struct
+...
+27field in this struct
+...
+27 |     audio_sample_rate: u32,
+    |     audio_sample_rate: u32,
+   |     ^^^^^^^^^^^^^^^^^
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default|
+   = note: `#[warn(dead_code)]` on by default
+
+
+
+warning: field `sample_rate` is never read
+  warning: field `sample_rate` is never read
+  --> src/infrastructure/src/adapters/tts_adapter.rs:10:5
+   |
+--> src/infrastructure/src/adapters/tts_adapter.rs:10:5
+   |
+ 9 | pub struct TtsAdapter { 9 | pub struct TtsAdapter {
+   |            ----------
+   |            ---------- field in this struct
+10 | field in this struct
+10 |     sample_rate: u32,
+   |     sample_rate: u32,
+   |     ^^^^^^^^^^^
+
+     ^^^^^^^^^^^
+
+warning: field `default_sample_rate` is never read
+  --> warning: field `default_sample_rate` is never read
+  --> src/infrastructure/src/adapters/vosk_adapter.rs:11:5
+   |
+ src/infrastructure/src/adapters/vosk_adapter.rs:11:5
+   |
+ 9 | pub struct VoskAdapter {
+9 | pub struct VoskAdapter {
+   |            -----------    |            ----------- field in this struct
+10 | field in this struct
+10 |     model: Arc<Model>,
+11 |     model: Arc<Model>,
+11 |     default_sample_rate: f32,
+   |         default_sample_rate: f32,
+   |     ^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^
+
+warning: field `enable_fallbacks` is never read
+   warning: field `enable_fallbacks` is never read
+   --> src/infrastructure/src/agent_control.rs:963:5
+    |
+--> src/infrastructure/src/agent_control.rs:963:5
+    |
+960 | pub struct SafeFailureHandler {
+960 | pub struct SafeFailureHandler {
+    |            ------------------     |            ------------------ field in this struct
+...
+963 field in this struct
+...
+963 |     enable_fallbacks: bool,
+    |     enable_fallbacks: bool,
+    |     ^^^^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^^^^
+
+warning: fields `shutdown_tx` and `error_analyzer` are never read
+  --> warning: fields `shutdown_tx` and `error_analyzer` are never read
+  --> src/infrastructure/src/background_supervisor.rs:86:5
+   |
+81src/infrastructure/src/background_supervisor.rs:86:5
+   |
+81 | pub struct BackgroundSupervisor {
+    | pub struct BackgroundSupervisor {
+   |            -------------------- fields in this struct|            -------------------- fields in this struct
+...
+86 |
+...
+86 |     shutdown_tx: flume::Sender<()>,
+   |     shutdown_tx: flume::Sender<()>,
+   |     ^^^^^^^^^^^
+87 |     ^^^^^^^^^^^
+87 |     shutdown_rx: flume::Receiver<()>,
+88      shutdown_rx: flume::Receiver<()>,
+88 |     error_analyzer: ErrorAnalyzer,
+   |     error_analyzer: ErrorAnalyzer,
+   |     ^^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^^
+
+warning: fields `name` and `handle` are never read
+  --> warning: fields `name` and `handle` are never read
+  --> src/infrastructure/src/background_supervisor.rs:95:5
+   |
+94src/infrastructure/src/background_supervisor.rs:95:5
+   |
+94 | struct BackgroundService {
+    | struct BackgroundService {
+   |        ----------------- fields in this struct
+95 |     name: String,
+   |        ----------------- fields in this struct
+95 |     name: String,
+   |     ^^^^
+96|     ^^^^
+96 |     handle: JoinHandle<()>,
+    |     handle: JoinHandle<()>,
+   |     ^^^^^^
+   |     ^^^^^^
+   |
+   = note|
+   = note: `BackgroundService` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+: `BackgroundService` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: variants `Starting`, `Stopped`, and `Failed` are never constructed
+   --> warning: variants `Starting`, `Stopped`, and `Failed` are never constructed
+   --> src/infrastructure/src/background_supervisor.rs:102:5
+    |
+101src/infrastructure/src/background_supervisor.rs:102:5
+    |
+101 | enum ServiceStatus {
+     | enum ServiceStatus {
+    |      ------------- variants in this enum|      ------------- variants in this enum
+102 |     Starting,
+102 |     Starting,
+    |     ^^^^^^^^
+    |     ^^^^^^^^
+103 |     Running,
+103 |     Running,
+104 | 
+104 |     Stopped,
+    |     ^^^^^^^    Stopped,
+    |     ^^^^^^^
+105 | 
+105 |     Failed(String),
+    |     ^^^^^^    Failed(String),
+    |     ^^^^^^
+    |
+    
+    |
+    = note: `ServiceStatus` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+= note: `ServiceStatus` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `start_lsp_client` is never used
+   --> warning: method `start_lsp_client` is never used
+   --> src/infrastructure/src/background_supervisor.rs:220:14
+    |
+108 src/infrastructure/src/background_supervisor.rs:220:14
+    |
+108 | impl BackgroundSupervisor {
+    | impl BackgroundSupervisor {
+    | ------------------------- method in this implementation
+| ------------------------- method in this implementation
+...
+220 |...
+220 |     async fn start_lsp_client(&mut self, project_root: PathBuf) -> Result<()> {
+    |     async fn start_lsp_client(&mut self, project_root: PathBuf) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^
+
+              ^^^^^^^^^^^^^^^^
+
+warning: field `chatgpt_url_pattern` is never read
+  --> warning: field `chatgpt_url_pattern` is never read
+  --> src/infrastructure/src/chatgpt_browser.rs:19:5
+   |
+17src/infrastructure/src/chatgpt_browser.rs:19:5
+   |
+17 | pub struct ChatGPTBrowser {
+    | pub struct ChatGPTBrowser {
+   |            -------------- field in this struct|            -------------- field in this struct
+18 |     browser_command: String,
+18 |     browser_command: String,
+19 | 
+19 |     chatgpt_url_pattern: Regex,
+   |     ^^^^^^^^^^^^^^^^^^^    chatgpt_url_pattern: Regex,
+   |     ^^^^^^^^^^^^^^^^^^^
+
+
+
+warning: fields `project_root` and `event_tx` are never read
+  --> warning: fields `project_root` and `event_tx` are never read
+  --> src/infrastructure/src/compilation_watcher.rs:12:5
+   |
+11src/infrastructure/src/compilation_watcher.rs:12:5
+   |
+11 | pub struct CompilationWatcher {
+    | pub struct CompilationWatcher {
+   |            ------------------ fields in this struct|            ------------------ fields in this struct
+12 |     project_root: PathBuf,
+12 |     project_root: PathBuf,
+   |     ^^^^^^^^^^^^
+   |     ^^^^^^^^^^^^
+13 | 
+13 |     event_tx: Sender<super::background_supervisor::BackgroundEvent>,
+   |     ^^^^^^^^    event_tx: Sender<super::background_supervisor::BackgroundEvent>,
+   |     ^^^^^^^^
+
+
+
+warning: associated functions `run_compilation_monitor`, `check_compilation`, and `parse_cargo_error` are never used
+   --> warning: associated functions `run_compilation_monitor`, `check_compilation`, and `parse_cargo_error` are never used
+   --> src/infrastructure/src/compilation_watcher.rs:31:14
+    |
+ src/infrastructure/src/compilation_watcher.rs:31:14
+    |
+ 16 | impl CompilationWatcher {
+16 | impl CompilationWatcher {
+    | -----------------------     | ----------------------- associated functions in this implementation
+...
+ 31 |     async fn run_compilation_monitor(
+associated functions in this implementation
+...
+ 31 |     async fn run_compilation_monitor(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^
+    |              ^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 52 |...
+ 52 |     async fn check_compilation(
+    |                   async fn check_compilation(
+    |              ^^^^^^^^^^^^^^^^^
+...
+104^^^^^^^^^^^^^^^^^
+...
+104 |     fn parse_cargo_error(line: &str) -> Option<CargoError> {
+     |     fn parse_cargo_error(line: &str) -> Option<CargoError> {
+    |        ^^^^^^^^^^^^^^^^^
+
+|        ^^^^^^^^^^^^^^^^^
+
+warning: struct `CargoError` is never constructed
+   --> warning: struct `CargoError` is never constructed
+   --> src/infrastructure/src/compilation_watcher.rs:137:8
+    |
+137src/infrastructure/src/compilation_watcher.rs:137:8
+    |
+137 | struct CargoError {
+     | struct CargoError {
+    |        ^^^^^^^^^^
+
+|        ^^^^^^^^^^
+
+warning: field `dependency_cache` is never read
+  --> warning: field `dependency_cache` is never read
+  --> src/infrastructure/src/expert_resolver.rs:12:5
+   |
+ src/infrastructure/src/expert_resolver.rs:12:5
+   |
+ 9 | pub struct ExpertResolver {
+9 | pub struct ExpertResolver {
+   |            --------------    |            -------------- field in this struct
+...
+12 field in this struct
+...
+12 |     dependency_cache: RwLock<HashMap<String, Vec<String>>>,
+   |     dependency_cache: RwLock<HashMap<String, Vec<String>>>,
+   |     ^^^^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^^^^
+
+warning: method `add_default_log_files` is never used
+  --> src/infrastructure/src/log_tailer.rs:67:8warning: method `add_default_log_files` is never used
+  --> src/infrastructure/src/log_tailer.rs:67:8
+   |
+15 
+   |
+15 | impl LogTailer {
+   || impl LogTailer {
+   | -------------- method in this implementation
+ -------------- method in this implementation
+...
+67 | ...
+67 |     fn add_default_log_files(&mut self) {
+   |            fn add_default_log_files(&mut self) {
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `alert_manager` is never read
+   warning: field `alert_manager` is never read
+   --> src/infrastructure/src/observability.rs:418:5
+    |
+--> src/infrastructure/src/observability.rs:418:5
+    |
+415 | pub struct ObservabilityManager {
+415 | pub struct ObservabilityManager {
+    |            --------------------     |            -------------------- field in this struct
+...
+418 field in this struct
+...
+418 |     alert_manager: AlertManager,
+    |     alert_manager: AlertManager,
+    |     ^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^
+
+warning: field `span_name` is never read
+   warning: field `span_name` is never read
+   --> src/infrastructure/src/observability.rs:971:5
+    |
+970--> src/infrastructure/src/observability.rs:971:5
+    |
+970 | pub struct SpanHandle {
+ | pub struct SpanHandle {
+    |            ---------- field in this struct    |            ---------- field in this struct
+971 | 
+971 |     span_name: String,
+    |     ^^^^^^^^^    span_name: String,
+    |     ^^^^^^^^^
+
+
+
+warning: field `base_path` is never read
+  --> warning: field `base_path` is never read
+  --> src/infrastructure/src/qdrant_advanced.rs:11:5
+   |
+ src/infrastructure/src/qdrant_advanced.rs:11:5
+   |
+ 9 | pub struct AdvancedQdrantManager {
+9 | pub struct AdvancedQdrantManager {
+   |            --------------------- field in this struct   |            --------------------- field in this struct
+10 | 
+10 |     collections: RwLock<HashMap<String, QdrantStorage>>,
+11 |     collections: RwLock<HashMap<String, QdrantStorage>>,
+11 |     base_path: std::path::PathBuf,
+   |     ^^^^^^^^^    base_path: std::path::PathBuf,
+   |     ^^^^^^^^^
+
+
+
+warning: field `policy_engine` is never read
+    --> warning: field `policy_engine` is never read
+    --> src/infrastructure/src/tools.rs:1238:5
+     |
+1236src/infrastructure/src/tools.rs:1238:5
+     |
+1236 | pub struct ToolRegistry {
+      | pub struct ToolRegistry {
+     |            ------------ field in this struct|            ------------ field in this struct
+1237 |     tools: HashMap<String, SafeTool>,
+1237 |     tools: HashMap<String, SafeTool>,
+1238 |     policy_engine: crate::policy_engine::PolicyEngine,
+     |     ^^^^^^^^^^^^^
+
+
+1238 |     policy_engine: crate::policy_engine::PolicyEngine,
+     |     ^^^^^^^^^^^^^
+
+warning: unused return value of `std::hint::must_use` that must be used
+   --> warning: unused return value of `std::hint::must_use` that must be used
+   --> src/infrastructure/src/adapters/screen/remote_control.rs:149:9
+    |
+149src/infrastructure/src/adapters/screen/remote_control.rs:149:9
+    |
+149 | /         format!( | /         format!(
+150 | 
+150 | |             "Right mouse clicked at ({}, {}) - implementation pending",
+151|             "Right mouse clicked at ({}, {}) - implementation pending",
+151 | |             x, y | |             x, y
+152 | 
+152 | |         );
+    ||         );
+    | |_________^
+    | |_________^
+    |
+    = note: `#[warn(unused_must_use)]` on by default
+
+    = note: `#[warn(unused_must_use)]` on by default
+help: use `let _ = ...` to ignore the resulting value
+    |help: use `let _ = ...` to ignore the resulting value
+    |
+149 |         
+149 |         let _ = format!(
+    |         let _ = format!(
+    |         +++++++
+
++++++++
+
+warning: unused return value of `std::hint::must_use` that must be used
+   --> warning: unused return value of `std::hint::must_use` that must be used
+   --> src/infrastructure/src/adapters/screen/remote_control.rs:167:9
+    |
+167src/infrastructure/src/adapters/screen/remote_control.rs:167:9
+    |
+167 |         format!("Double clicked at ({}, {}) - implementation pending", x, y);
+     |         format!("Double clicked at ({}, {}) - implementation pending", x, y);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+167 | |
+167 |         let _ = format!("Double clicked at ({}, {}) - implementation pending", x, y);
+            let _ = format!("Double clicked at ({}, {}) - implementation pending", x, y);
+    |         +++++++
+
+|         +++++++
+
+warning: unused `Result` that must be used
+  --> warning: unused `Result` that must be used
+  --> src/infrastructure/src/embedding_storage.rs:77:9
+   |
+77src/infrastructure/src/embedding_storage.rs:77:9
+   |
+77 | /         task::spawn_blocking(move || -> Result<()> { | /         task::spawn_blocking(move || -> Result<()> {
+78 | 
+78 | |             let conn = conn.blocking_lock();
+79 |             let conn = conn.blocking_lock();
+79 | |             let tx = conn.unchecked_transaction()?;| |             let tx = conn.unchecked_transaction()?;
+...  |
+95
+...  |
+95 | |  | |             Ok(())
+96 |             Ok(())
+96 | |         }).await?;
+   |         }).await?;
+   | |_________________^
+   || |_________________^
+   |
+   = note: this `Result` may be an `Err` variant, which should be handled
+
+   = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+   |help: use `let _ = ...` to ignore the resulting value
+   |
+77 |         let _ = 
+77 |         let _ = task::spawn_blocking(move || -> Result<()> {
+   |         task::spawn_blocking(move || -> Result<()> {
+   |         +++++++
+
++++++++
+
+warning: creating a shared reference to mutable static
+   --> warning: creating a shared reference to mutable static
+   --> src/infrastructure/src/observability.rs:537:9
+    |
+537src/infrastructure/src/observability.rs:537:9
+    |
+537 | /         GLOBAL_OBSERVABILITY | /         GLOBAL_OBSERVABILITY
+538 | 
+538 | |             .as_ref()
+    ||             .as_ref()
+    | |_____________________^ shared reference to mutable static
+ |_____________________^ shared reference to mutable static
+    |
+    = note    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/static-mut-references.html>
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/static-mut-references.html>
+    = note: shared references to mutable statics are dangerous; it's undefined behavior if the static is mutated or if a mutable reference is created for it while the shared reference lives
+    = note: `#[warn(static_mut_refs)]` on by default
+
+: shared references to mutable statics are dangerous; it's undefined behavior if the static is mutated or if a mutable reference is created for it while the shared reference lives
+    = note: `#[warn(static_mut_refs)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/infrastructure/src/privacy_controls.rs:356:37
+    |
+356src/infrastructure/src/privacy_controls.rs:356:37
+    |
+356 |     pub fn start_monitoring_session(&self) -> Result<NetworkSession> {
+     |     pub fn start_monitoring_session(&self) -> Result<NetworkSession> {
+    |                                     ^^^^^            --------------|                                     ^^^^^            -------------- the same lifetime is hidden here
+    | the same lifetime is hidden here
+    |                                     |
+    |                                                                          |
+    |                                     the lifetime is elided here
+    |
+the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+        = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help= note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+356: use `'_` for type paths
+    |
+356 |     pub fn start_monitoring_session(&self) -> Result<NetworkSession<'_>> { |     pub fn start_monitoring_session(&self) -> Result<NetworkSession<'_>> {
+    |                                                                    ++++
+    |                                                                    ++++
+
+
+
+warning: `infrastructure` (lib) generated 76 warnings (run `cargo fix --lib -p infrastructure` to apply 9 suggestions)
+warning: `infrastructure` (lib) generated 76 warnings (run `cargo fix --lib -p infrastructure` to apply 9 suggestions)
+warning: unused import: `ConversationMemory`
+ --> src/application/src/health_monitor.rs:6:30warning: unused import: `ConversationMemory`
+ --> src/application/src/health_monitor.rs:6:30
+  |
+6 
+  |
+6 | use crate::semantic_memory::{ConversationMemory, SemanticMemoryService};
+  || use crate::semantic_memory::{ConversationMemory, SemanticMemoryService};
+  |                              ^^^^^^^^^^^^^^^^^^
+  |                              ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+  = note: `#[warn(unused_imports)]` on by default
+
+
+warning: unused import: `infrastructure::qdrant_storage::QdrantStorage`
+ warning: unused import: `infrastructure::qdrant_storage::QdrantStorage`
+ --> src/application/src/health_monitor.rs:7:5
+  |
+--> src/application/src/health_monitor.rs:7:5
+  |
+7 | use infrastructure::qdrant_storage::QdrantStorage;
+7 | use infrastructure::qdrant_storage::QdrantStorage;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> warning: unused import: `std::collections::HashMap`
+  --> src/application/src/metrics_collector.rs:10:5
+   |
+10src/application/src/metrics_collector.rs:10:5
+   |
+10 | use std::collections::HashMap;
+    | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `worker_id`
+   --> warning: unused variable: `worker_id`
+   --> src/application/src/advanced_scheduler.rs:294:14
+    |
+294src/application/src/advanced_scheduler.rs:294:14
+    |
+294 |         for (worker_id, queue) in queues.iter_mut() {
+     |         for (worker_id, queue) in queues.iter_mut() {
+    |              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_worker_id`|              ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_worker_id`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `iteration_result`
+    warning: unused variable: `iteration_result`
+    --> src/application/src/agent_service.rs:2611:17
+     |
+--> src/application/src/agent_service.rs:2611:17
+     |
+2611 |             let iteration_result = AgentIterationResult {
+2611 |             let iteration_result = AgentIterationResult {
+     |                 ^^^^^^^^^^^^^^^^      |                 ^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_iteration_result`
+
+help: if this is intentional, prefix it with an underscore: `_iteration_result`
+
+warning: unused variable: `description`
+   --> src/application/src/collection_partitioner.rs:128:25warning: unused variable: `description`
+   --> src/application/src/collection_partitioner.rs:128:25
+    |
+128 
+    |
+128 |                     let description = format!("Auto-created partition for {} language", language);
+    ||                     let description = format!("Auto-created partition for {} language", language);
+    |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_description`
+                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_description`
+
+
+warning: unused variable: `memory`
+   warning: unused variable: `memory`
+   --> src/application/src/collection_partitioner.rs:145:9
+    |
+--> src/application/src/collection_partitioner.rs:145:9
+    |
+145 |         memory: &ConversationMemory,
+145 |         memory: &ConversationMemory,
+    |         ^^^^^^     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_memory`
+
+help: if this is intentional, prefix it with an underscore: `_memory`
+
+warning: unused variable: `knowledge`
+   --> src/application/src/hallucination_detector.rs:203:9
+warning: unused variable: `knowledge`
+   --> src/application/src/hallucination_detector.rs:203:9
+    |
+203 |    |
+203 |         knowledge: &ProjectKnowledge,
+    |                  knowledge: &ProjectKnowledge,
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_knowledge`
+
+^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_knowledge`
+
+warning: unused variable: `knowledge`
+   --> src/application/src/hallucination_detector.rs:239:9warning: unused variable: `knowledge`
+   --> src/application/src/hallucination_detector.rs:239:9
+    |
+239 
+    |
+239 |         knowledge: &ProjectKnowledge,
+    ||         knowledge: &ProjectKnowledge,
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_knowledge`
+         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_knowledge`
+
+
+warning: unused variable: `content`
+   warning: unused variable: `content`
+   --> src/application/src/hallucination_detector.rs:388:17
+    |
+--> src/application/src/hallucination_detector.rs:388:17
+    |
+388 |             let content = tokio::fs::read_to_string(&cargo_toml).await?;
+388 |             let content = tokio::fs::read_to_string(&cargo_toml).await?;
+    |                 ^^^^^^^     |                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_content`
+
+help: if this is intentional, prefix it with an underscore: `_content`
+
+warning: unused variable: `metrics_collector`
+   --> warning: unused variable: `metrics_collector`
+   --> src/application/src/memory_dashboard.rs:400:38
+    |
+400 src/application/src/memory_dashboard.rs:400:38
+    |
+400 | pub async fn display_quick_dashboard(metrics_collector: &MetricsCollector) -> Result<()> {
+    | pub async fn display_quick_dashboard(metrics_collector: &MetricsCollector) -> Result<()> {
+    |                                      ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_metrics_collector`|                                      ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_metrics_collector`
+
+warning
+
+warning: unused variable: `prompt`
+   --> src/application/src/memory_summarizer.rs:257:13
+: unused variable: `prompt`
+   --> src/application/src/memory_summarizer.rs:257:13
+    |
+257 |    |
+257 |         let prompt = format!(
+    |         let prompt = format!(
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: unused variable: `client`
+   warning: unused variable: `client`
+   --> src/application/src/memory_summarizer.rs:264:37
+    |
+264--> src/application/src/memory_summarizer.rs:264:37
+    |
+264 |             InferenceEngine::Ollama(client) => {
+ |             InferenceEngine::Ollama(client) => {
+    |                                     ^^^^^^     |                                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+
+help: if this is intentional, prefix it with an underscore: `_client`
+
+warning: unused variable: `prompt`
+   warning: unused variable: `prompt`
+   --> src/application/src/parallel_agent.rs:114:13
+    |
+--> src/application/src/parallel_agent.rs:114:13
+    |
+114 |         let prompt = format!(
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+114 |         let prompt = format!(
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_prompt`
+
+warning: variable does not need to be mutable
+   --> src/application/src/rag_service.rs:110:60
+warning: variable does not need to be mutable
+   --> src/application/src/rag_service.rs:110:60
+    |
+110 |     |
+110 |     pub async fn query_streaming<F>(&self, question: &str, mut on_chunk: F) -> Result<String>
+    |                                                            ----^^^^^^^^    pub async fn query_streaming<F>(&self, question: &str, mut on_chunk: F) -> Result<String>
+    |                                                            ----^^^^^^^^
+    |                                                            |
+
+    |                                                            |
+    |                                                            help: remove this `mut`
+    |    |                                                            help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: unused variable: `sanitized_feedback`
+   --> warning: unused variable: `sanitized_feedback`
+   --> src/application/src/rag_service.rs:173:13
+    |
+173src/application/src/rag_service.rs:173:13
+    |
+173 |         let sanitized_feedback = if feedback.is_empty() {
+     |         let sanitized_feedback = if feedback.is_empty() {
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`|             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`
+
+
+
+warning: unused variable: `sanitized_feedback`
+   --> warning: unused variable: `sanitized_feedback`
+   --> src/application/src/rag_service.rs:259:13
+    |
+259src/application/src/rag_service.rs:259:13
+    |
+259 |         let sanitized_feedback = if feedback.is_empty() {
+     |         let sanitized_feedback = if feedback.is_empty() {
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`|             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`
+
+
+
+warning: variable does not need to be mutable
+   --> src/application/src/rag_service.rs:200:9warning: variable does not need to be mutable
+   --> src/application/src/rag_service.rs:200:9
+    |
+200 
+    |
+200 |         mut on_chunk: F,
+    ||         mut on_chunk: F,
+    |         ----^^^^^^^^
+             ----^^^^^^^^
+    |         |
+    ||         |
+    |         help: remove this `mut`
+
+         help: remove this `mut`
+
+warning: unused variable: `sanitized_feedback`
+   warning: unused variable: `sanitized_feedback`
+   --> src/application/src/rag_service.rs:334:13
+    |
+--> src/application/src/rag_service.rs:334:13
+    |
+334 |         let sanitized_feedback = if feedback.is_empty() {334 |         let sanitized_feedback = if feedback.is_empty() {
+    |             ^^^^^^^^^^^^^^^^^^ 
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`
+
+help: if this is intentional, prefix it with an underscore: `_sanitized_feedback`
+
+warning: unused variable: `headless`
+   --> warning: unused variable: `headless`
+   --> src/application/src/voice_command_processor.rs:279:47
+    |
+279src/application/src/voice_command_processor.rs:279:47
+    |
+279 |     pub async fn start_browser_session(&self, headless: bool) -> Result<String> {
+     |     pub async fn start_browser_session(&self, headless: bool) -> Result<String> {
+    |                                               ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_headless`|                                               ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_headless`
+
+
+
+warning: unused variable: `load_score`
+   --> warning: unused variable: `load_score`
+   --> src/application/src/advanced_scheduler.rs:383:9
+    |
+383src/application/src/advanced_scheduler.rs:383:9
+    |
+383 |         load_score: f32,
+     |         load_score: f32,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_load_score`|         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_load_score`
+
+
+
+warning: unused variable: `rag_service`
+    --> src/application/src/agent_service.rs:1105:9warning: unused variable: `rag_service`
+    --> src/application/src/agent_service.rs:1105:9
+     |
+1105 
+     |
+1105 |         rag_service: Arc<RagService>,
+     ||         rag_service: Arc<RagService>,
+     |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rag_service`
+         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rag_service`
+
+
+warningwarning: unused variable: `dep_index`
+   --> src/application/src/build_service.rs:266:29: unused variable: `dep_index`
+   --> src/application/src/build_service.rs:266:29
+    |
+266
+    |
+266 |                 if let Some(dep_index) = self.find_operation_index(dep_name) {
+     |                 if let Some(dep_index) = self.find_operation_index(dep_name) {
+    |                             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dep_index`|                             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dep_index`
+
+
+
+warning: unused variable: `path`
+   --> src/application/src/build_service.rs:598:37warning: unused variable: `path`
+   --> src/application/src/build_service.rs:598:37
+    |
+598 
+    |
+598 |             FileOperation::Create { path, content } => {
+    ||             FileOperation::Create { path, content } => {
+    |                                     ^^^^ help: try ignoring the field: `path: _`
+                                     ^^^^ help: try ignoring the field: `path: _`
+
+
+warningwarning: unused variable: `path`
+   --> src/application/src/build_service.rs:609:17: unused variable: `path`
+   --> src/application/src/build_service.rs:609:17
+    |
+609 
+    |
+609 |                 path,
+    |                 path,
+    |                 ^^^^ help: try ignoring the field: `path: _`|                 ^^^^ help: try ignoring the field: `path: _`
+
+
+
+warning: unused variable: `suggestion`
+   warning: unused variable: `suggestion`
+   --> src/application/src/context_aware_validator.rs:351:9
+    |
+--> src/application/src/context_aware_validator.rs:351:9
+    |
+351 |         suggestion: &str,
+351 |         suggestion: &str,
+    |         ^^^^^^^^^^     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_suggestion`
+
+help: if this is intentional, prefix it with an underscore: `_suggestion`
+
+warning: unused variable: `file_name`
+   warning: unused variable: `file_name`
+   --> src/application/src/context_aware_validator.rs:472:9
+    |--> src/application/src/context_aware_validator.rs:472:9
+    |
+472 |         file_name: &str,
+472 |         file_name: &str,
+    |         ^^^^^^^^^
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_name`
+
+ help: if this is intentional, prefix it with an underscore: `_file_name`
+
+warning: unused variable: `file_name`
+   --> src/application/src/context_aware_validator.rs:554:9warning: unused variable: `file_name`
+   --> src/application/src/context_aware_validator.rs:554:9
+    |
+554 
+    |
+554 |         file_name: &str,
+    ||         file_name: &str,
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_name`
+         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_file_name`
+
+
+warning: value assigned to `conflicts` is never read
+   --> src/application/src/parallel_agent.rs:536:17warning: value assigned to `conflicts` is never read
+   --> src/application/src/parallel_agent.rs:536:17
+    |
+536 
+    |
+536 |         let mut conflicts = Vec::new();
+    ||         let mut conflicts = Vec::new();
+    |                 ^^^^^^^^^
+    |                 ^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+    = note: `#[warn(unused_assignments)]` on by default
+
+
+warning: unused variable: `plugin`
+   warning: unused variable: `plugin`
+   --> src/application/src/voice_command_processor.rs:349:9
+    |
+349--> src/application/src/voice_command_processor.rs:349:9
+    |
+349 |         plugin: Box<dyn infrastructure::plugin_registry::VoicePlugin>,
+ |         plugin: Box<dyn infrastructure::plugin_registry::VoicePlugin>,
+    |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_plugin`    |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_plugin`
+
+
+
+warning: type `FileSpec` is more private than the item `IncrementalBuildPlanner::create_complex_operation`
+   warning: type `FileSpec` is more private than the item `IncrementalBuildPlanner::create_complex_operation`
+   --> src/application/src/agent_service.rs:660:5
+    |
+660--> src/application/src/agent_service.rs:660:5
+    |
+660 | /     pub fn create_complex_operation( | /     pub fn create_complex_operation(
+661 | |
+661 | |         &self,
+662          &self,
+662 | |         name: String,
+| |         name: String,
+663 | |663 | |         description: String,
+664 |         description: String,
+664 | |         file_specs: Vec<FileSpec>,
+ |         file_specs: Vec<FileSpec>,
+665 | | 665 | |     ) -> Result<ComplexOperation> {
+    |     ) -> Result<ComplexOperation> {
+    | |_________________________________^ method `IncrementalBuildPlanner::create_complex_operation` is reachable at visibility `pub`
+    ||_________________________________^ method `IncrementalBuildPlanner::create_complex_operation` is reachable at visibility `pub`
+    |
+note: but type `FileSpec` is only usable at visibility `pub(self)`
+   
+note: but type `FileSpec` is only usable at visibility `pub(self)`
+   --> src/application/src/agent_service.rs:117:1
+    |
+--> src/application/src/agent_service.rs:117:1
+    |
+117 | struct FileSpec {
+117 | struct FileSpec {
+    | ^^^^^^^^^^^^^^^
+    | ^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+    = note: `#[warn(private_interfaces)]` on by default
+
+
+warning: field `complex_operations` is never read
+  warning: field `complex_operations` is never read
+  --> src/application/src/agent_service.rs:95:5
+   |
+--> src/application/src/agent_service.rs:95:5
+   |
+90 | pub struct IncrementalBuildPlanner {
+90 | pub struct IncrementalBuildPlanner {
+   |            -----------------------    |            ----------------------- field in this struct
+...
+95 field in this struct
+...
+95 |     complex_operations: Vec<ComplexOperation>,
+   |     complex_operations: Vec<ComplexOperation>,
+   |     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+|     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+
+warning: methods `create_operation_from_code`, `apply_diff_to_content`, and `parse_line_range` are never used
+   --> warning: methods `create_operation_from_code`, `apply_diff_to_content`, and `parse_line_range` are never used
+   --> src/application/src/agent_service.rs:636:8
+    |
+123src/application/src/agent_service.rs:636:8
+    |
+123 | impl IncrementalBuildPlanner {
+     | impl IncrementalBuildPlanner {
+    | ---------------------------- methods in this implementation| ---------------------------- methods in this implementation
+...
+636 |
+...
+636 |     fn create_operation_from_code(
+    |     fn create_operation_from_code(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+905        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+905 |     fn apply_diff_to_content(&self, original_content: &str, diff_text: &str) -> Result<String> {
+ |     fn apply_diff_to_content(&self, original_content: &str, diff_text: &str) -> Result<String> {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+...    |        ^^^^^^^^^^^^^^^^^^^^^
+...
+994 | 
+994 |     fn parse_line_range(&self, range_str: &str) -> Option<(usize, usize)> {
+    |            fn parse_line_range(&self, range_str: &str) -> Option<(usize, usize)> {
+    |        ^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^
+
+warning: methods `filter_valid_tool_calls` and `detects_web_intent` are never used
+    --> warning: methods `filter_valid_tool_calls` and `detects_web_intent` are never used
+    --> src/application/src/agent_service.rs:1314:8
+     |
+1052src/application/src/agent_service.rs:1314:8
+     |
+1052 | impl AgentService {
+      | impl AgentService {
+     | ----------------- methods in this implementation| ----------------- methods in this implementation
+...
+1314 |
+...
+1314 |     fn filter_valid_tool_calls(
+     |     fn filter_valid_tool_calls(
+     |        ^^^^^^^^^^^^^^^^^^^^^^^
+...
+1843        ^^^^^^^^^^^^^^^^^^^^^^^
+...
+1843 |     fn detects_web_intent(&self, lower_goal: &str) -> bool {
+ |     fn detects_web_intent(&self, lower_goal: &str) -> bool {
+     |        ^^^^^^^^^^^^^^^^^^
+
+     |        ^^^^^^^^^^^^^^^^^^
+
+warning: field `cached_project_scan` is never read
+   --> warning: field `cached_project_scan` is never read
+   --> src/application/src/build_service.rs:324:5
+    |
+306src/application/src/build_service.rs:324:5
+    |
+306 | pub struct BuildService {
+     | pub struct BuildService {
+    |            ------------ field in this struct
+|            ------------ field in this struct
+...
+324 |...
+324 |     cached_project_scan: Option<ProjectScanCache>,
+    |          cached_project_scan: Option<ProjectScanCache>,
+    |     ^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^
+
+warning: fields `scanned_at`, `files`, `total_size`, and `is_git_repo` are never read
+   --> warning: fields `scanned_at`, `files`, `total_size`, and `is_git_repo` are never read
+   --> src/application/src/build_service.rs:331:5
+    |
+329src/application/src/build_service.rs:331:5
+    |
+329 | struct ProjectScanCache {
+     | struct ProjectScanCache {
+    |        ---------------- fields in this struct|        ---------------- fields in this struct
+330 |     /// When the scan was performed
+330 |     /// When the scan was performed
+331 | 
+331 |     scanned_at: std::time::SystemTime,
+    |     ^^^^^^^^^^    scanned_at: std::time::SystemTime,
+    |     ^^^^^^^^^^
+332 | 
+332 |     /// List of files found
+333 |     /// List of files found
+333 |     files: Vec<PathBuf>,
+    |         files: Vec<PathBuf>,
+    |     ^^^^^
+334 | ^^^^^
+334 |     /// Total size in bytes
+335 |    /// Total size in bytes
+335 |     total_size: u64,
+    |          total_size: u64,
+    |     ^^^^^^^^^^
+336 |^^^^^^^^^^
+336 |     /// Whether this is a git repository
+337 |     /// Whether this is a git repository
+337 |     is_git_repo: bool,
+    |          is_git_repo: bool,
+    |     ^^^^^^^^^^^
+    |
+    ^^^^^^^^^^^
+    |
+    = note: `ProjectScanCache` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+= note: `ProjectScanCache` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: method `execute_operation` is never used
+   --> src/application/src/build_service.rs:718:14warning: method `execute_operation` is never used
+   --> src/application/src/build_service.rs:718:14
+    |
+340 
+    |
+340 | impl BuildService {
+    || impl BuildService {
+    | ----------------- method in this implementation
+ ----------------- method in this implementation
+...
+718 |...
+718 |     async fn execute_operation(&self, operation: &FileOperation) -> Result<()> {
+    |     async fn execute_operation(&self, operation: &FileOperation) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^
+
+              ^^^^^^^^^^^^^^^^^
+
+warning: field `file_dependencies` is never read
+  --> warning: field `file_dependencies` is never read
+  --> src/application/src/context_aware_validator.rs:19:5
+   |
+13src/application/src/context_aware_validator.rs:19:5
+   |
+13 | pub struct KnowledgeGraph {
+    | pub struct KnowledgeGraph {
+   |            -------------- field in this struct|            -------------- field in this struct
+...
+19 |
+...
+19 |     file_dependencies: HashMap<String, HashSet<String>>,
+   |     file_dependencies: HashMap<String, HashSet<String>>,
+   |     ^^^^^^^^^^^^^^^^^
+   |
+     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `KnowledgeGraph` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `KnowledgeGraph` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+
+warning: methods `process_rust_file`, `extract_code_entities`, and `get_project_root` are never used
+   --> warning: methods `process_rust_file`, `extract_code_entities`, and `get_project_root` are never used
+   --> src/application/src/context_aware_validator.rs:449:14
+    |
+396src/application/src/context_aware_validator.rs:449:14
+    |
+396 | impl KnowledgeGraph {
+     | impl KnowledgeGraph {
+    | ------------------- methods in this implementation| ------------------- methods in this implementation
+...
+449 |
+...
+449 |     async fn process_rust_file(&mut self, file_path: &std::path::Path) -> Result<()> {
+    |     async fn process_rust_file(&mut self, file_path: &std::path::Path) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^
+...
+              ^^^^^^^^^^^^^^^^^
+...
+469 |     fn extract_code_entities(
+469 |     fn extract_code_entities(
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |        ^^^^^^^^^^^^^^^^^^^^^
+...
+523 | ...
+523 |     fn get_project_root(&self) -> &std::path::Path {
+    |            fn get_project_root(&self) -> &std::path::Path {
+    |        ^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^
+
+warning: field `check_interval` is never read
+  --> warning: field `check_interval` is never read
+  --> src/application/src/health_monitor.rs:42:5
+   |
+39src/application/src/health_monitor.rs:42:5
+   |
+39 | pub struct HealthMonitor {
+    | pub struct HealthMonitor {
+   |            ------------- field in this struct|            ------------- field in this struct
+...
+42 |
+...
+42 |     check_interval: Duration,
+   |     check_interval: Duration,
+   |     ^^^^^^^^^^^^^^
+
+     ^^^^^^^^^^^^^^
+
+warning: field `summary_collection` is never read
+  --> warning: field `summary_collection` is never read
+  --> src/application/src/memory_summarizer.rs:40:5
+   |
+37src/application/src/memory_summarizer.rs:40:5
+   |
+37 | pub struct MemorySummarizer {
+    | pub struct MemorySummarizer {
+   |            ---------------- field in this struct|            ---------------- field in this struct
+...
+40 |
+...
+40 |     summary_collection: String,
+   |     summary_collection: String,
+   |     ^^^^^^^^^^^^^^^^^^
+
+     ^^^^^^^^^^^^^^^^^^
+
+warning: field `avg_message_length` is never read
+   --> warning: field `avg_message_length` is never read
+   --> src/application/src/memory_summarizer.rs:395:5
+    |
+392src/application/src/memory_summarizer.rs:395:5
+    |
+392 | struct ConversationAnalysis {
+    |        -------------------- field in this struct
+ | struct ConversationAnalysis {
+    |        -------------------- field in this struct
+...
+395 | ...
+395 |     avg_message_length: f32,
+    |         avg_message_length: f32,
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `ConversationAnalysis` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+= note: `ConversationAnalysis` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: field `enable_load_balancing` is never read
+  --> warning: field `enable_load_balancing` is never read
+  --> src/application/src/parallel_agent.rs:78:5
+   |
+76src/application/src/parallel_agent.rs:78:5
+   |
+76 | pub struct ParallelAgentOrchestrator {
+    | pub struct ParallelAgentOrchestrator {
+   |            ------------------------- field in this struct|            ------------------------- field in this struct
+77 |     max_concurrent_tasks: usize,
+77 |     max_concurrent_tasks: usize,
+78 | 
+78 |     enable_load_balancing: bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^    enable_load_balancing: bool,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+warning: field `collection_name` is never read
+  --> warning: field `collection_name` is never read
+  --> src/application/src/semantic_memory.rs:32:5
+   |
+29src/application/src/semantic_memory.rs:32:5
+   |
+29 | pub struct SemanticMemoryService {
+    | pub struct SemanticMemoryService {
+   |            --------------------- field in this struct|            --------------------- field in this struct
+...
+32 |
+...
+32 |     collection_name: String,
+   |          collection_name: String,
+   |     ^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^
+
+warning: field `display_mode` is never read
+   --> warning: field `display_mode` is never read
+   --> src/application/src/streaming_agent.rs:131:5
+    |
+128src/application/src/streaming_agent.rs:131:5
+    |
+128 | pub struct StreamingAgentOrchestrator {
+     | pub struct StreamingAgentOrchestrator {
+    |            -------------------------- field in this struct|            -------------------------- field in this struct
+...
+131 |
+...
+131 |     display_mode: DisplayMode,
+    |     display_mode: DisplayMode,
+    |     ^^^^^^^^^^^^
+
+     ^^^^^^^^^^^^
+
+warning: field `script_executor` is never read
+  warning: field `script_executor` is never read
+  --> src/application/src/voice_command_processor.rs:27:5
+   |
+--> src/application/src/voice_command_processor.rs:27:5
+   |
+23 | pub struct VoiceCommandProcessor {
+23 | pub struct VoiceCommandProcessor {
+   |            ---------------------    |            --------------------- field in this struct
+...
+27 field in this struct
+...
+27 |     script_executor: Arc<dyn ScriptExecutor>,
+   |     script_executor: Arc<dyn ScriptExecutor>,
+   |     ^^^^^^^^^^^^^^^
+
+|     ^^^^^^^^^^^^^^^
+
+warning: methods `execute_workflow`, `execute_script`, and `execute_integration` are never used
+   --> warning: methods `execute_workflow`, `execute_script`, and `execute_integration` are never used
+   --> src/application/src/voice_command_processor.rs:180:14
+    |
+ src/application/src/voice_command_processor.rs:180:14
+    |
+ 33 | impl VoiceCommandProcessor {
+33 | impl VoiceCommandProcessor {
+    | --------------------------     | -------------------------- methods in this implementation
+...
+180 methods in this implementation
+...
+180 |     async fn execute_workflow(&self, workflow_id: &str) -> Result<serde_json::Value> {
+    |     async fn execute_workflow(&self, workflow_id: &str) -> Result<serde_json::Value> {
+    |              ^^^^^^^^^^^^^^^^
+...
+|              ^^^^^^^^^^^^^^^^
+...
+197 |     async fn execute_script(&self, script_id: &str) -> Result<serde_json::Value> {197 |     async fn execute_script(&self, script_id: &str) -> Result<serde_json::Value> {
+    |              ^^^^^^^^^^^^^^
+
+    |              ^^^^^^^^^^^^^^
+...
+216 |...
+216 |     async fn execute_integration(&self, service: &str) -> Result<serde_json::Value> {
+    |                   async fn execute_integration(&self, service: &str) -> Result<serde_json::Value> {
+    |              ^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/application/src/advanced_scheduler.rs:327:33
+    |
+327src/application/src/advanced_scheduler.rs:327:33
+    |
+327 |     pub async fn acquire_permit(&self) -> Result<tokio::sync::SemaphorePermit> {
+     |     pub async fn acquire_permit(&self) -> Result<tokio::sync::SemaphorePermit> {
+    |                                 ^^^^^            ----------------------------|                                 ^^^^^            ---------------------------- the same lifetime is hidden here
+    | the same lifetime is hidden here
+    |                                 |
+    |                                                                  |
+    |                                 the lifetime is elided here
+    |
+the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+        = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help= note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+327: use `'_` for type paths
+    |
+327 |     pub async fn acquire_permit(&self) -> Result<tokio::sync::SemaphorePermit<'_>> { |     pub async fn acquire_permit(&self) -> Result<tokio::sync::SemaphorePermit<'_>> {
+    |                                                                              ++++
+    |                                                                              ++++
+
+
+
+warning: unused `Result` that must be used
+   --> warning: unused `Result` that must be used
+   --> src/application/src/streaming_agent.rs:434:17
+    |
+434src/application/src/streaming_agent.rs:434:17
+    |
+434 |                 std::io::stdout().flush();
+     |                 std::io::stdout().flush();
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled|
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` on by default
+    = note: `#[warn(unused_must_use)]` on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+434 |                 
+434 |                 let _ = std::io::stdout().flush();
+    |let _ = std::io::stdout().flush();
+    |                 +++++++
+
+                 +++++++
+
+warning: unused `Result` that must be used
+   --> warning: unused `Result` that must be used
+   --> src/application/src/streaming_agent.rs:442:17
+    |
+442src/application/src/streaming_agent.rs:442:17
+    |
+442 |                 std::io::stdout().flush();
+     |                 std::io::stdout().flush();
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled|
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    
+help: use `let _ = ...` to ignore the resulting value
+    |
+442 |                 |
+442 |                 let _ = std::io::stdout().flush();
+    |let _ = std::io::stdout().flush();
+    |                 +++++++
+
+                 +++++++
+
+warning: `application` (lib) generated 50 warnings (run `cargo fix --lib -p application` to apply 5 suggestions)
+warning: `application` (lib) generated 50 warnings (run `cargo fix --lib -p application` to apply 5 suggestions)
+   Compiling presentation v0.1.0 (/home/rendi/projects/bro/src/presentation)
+   Compiling presentation v0.1.0 (/home/rendi/projects/bro/src/presentation)
+warning: unused import: `std::collections::HashSet`
+ --> src/presentation/src/utils.rs:1:5
+  |
+1 | use std::collections::HashSet;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  warning: unused import: `std::collections::HashSet`
+ --> src/presentation/src/utils.rs:1:5
+  |
+1 | use std::collections::HashSet;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `DefaultHasher`
+ --> src/presentation/src/utils.rs:2:31
+  |
+2 | use std::hash::{Hash, Hasher, DefaultHasher};
+|
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `DefaultHasher`
+ --> src/presentation/src/utils.rs:2:31
+  |
+2 | use std::hash::{Hash, Hasher, DefaultHasher};
+  |                               ^^^^^^^^^^^^^
+
+  |                               ^^^^^^^^^^^^^
+
+warning: unused imports: `clean_command_output` and `extract_last_json`
+ --> src/presentation/src/agent.rs:4:20warning: unused imports: `clean_command_output` and `extract_last_json`
+ --> src/presentation/src/agent.rs:4:20
+  |
+4 |
+  |
+4 | use crate::utils::{extract_last_json, clean_command_output};
+  | use crate::utils::{extract_last_json, clean_command_output};
+  |                    ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+                    ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `agent_service::AgentService`
+ --> src/presentation/src/cli.rs:2:19warning: unused import: `agent_service::AgentService`
+ --> src/presentation/src/cli.rs:2:19
+  |
+2 
+  |
+2 | use application::{agent_service::AgentService, build_service::BuildPlan, rag_service::RagService};
+  | use application::{agent_service::AgentService, build_service::BuildPlan, rag_service::RagService};
+  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+|                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `chrono::Utc`
+ --> warning: unused import: `chrono::Utc`
+ --> src/presentation/src/cli.rs:4:5
+  |
+4 | src/presentation/src/cli.rs:4:5
+  |
+4 | use chrono::Utc;
+  |     ^^^^^^^^^^^
+
+use chrono::Utc;
+  |     ^^^^^^^^^^^
+
+warning: unused imports: `InputClassifier` and `InputType`
+  --> src/presentation/src/cli.rs:15:24
+   warning: unused imports: `InputClassifier` and `InputType`
+  --> src/presentation/src/cli.rs:15:24
+   |
+15 |     input_classifier::{InputClassifier, InputType},
+   |
+15 |     input_classifier::{InputClassifier, InputType},
+   |                        ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+|                        ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `HashSet`
+  --> src/presentation/src/cli.rs:23:33
+warning: unused import: `HashSet`
+  --> src/presentation/src/cli.rs:23:33
+   |
+23 | use std::collections::{HashMap, HashSet};   |
+23 | use std::collections::{HashMap, HashSet};
+   |                                 ^^^^^^^
+
+
+   |                                 ^^^^^^^
+
+warning: unused import: `Hash`
+  --> src/presentation/src/cli.rs:24:17
+   |
+warning: unused import: `Hash`
+  --> src/presentation/src/cli.rs:24:17
+   |
+24 | use std::hash::{Hash, Hasher};
+   |                 24 | use std::hash::{Hash, Hasher};
+   |                 ^^^^
+
+^^^^
+
+warning: unused imports: `AtomicBool` and `Ordering`
+  --> src/presentation/src/cli.rs:27:25
+   |
+27 | use std::sync::atomic::{AtomicBool, Ordering};
+   |                         ^^^^^^^^^^  ^^^^^^^^
+
+warning: unused imports: `AtomicBool` and `Ordering`
+  --> src/presentation/src/cli.rs:27:25
+   |
+27 | use std::sync::atomic::{AtomicBool, Ordering};
+   |                         ^^^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/presentation/src/cli.rs:28:5
+warning: unused import: `std::sync::Arc`
+  --> src/presentation/src/cli.rs:28:5
+   |
+28 | use std::sync::Arc;
+   |
+28 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `RwLock` and `oneshot`
+  --> src/presentation/src/cli.rs:29:19
+   |
+29warning: unused imports: `RwLock` and `oneshot`
+  --> src/presentation/src/cli.rs:29:19
+   |
+29 | use tokio::sync::{oneshot, RwLock};
+   |                   ^^^^^^^ | use tokio::sync::{oneshot, RwLock};
+   |                   ^^^^^^^  ^^^^^^
+
+  ^^^^^^
+
+warning: unused imports: `Duration` and `self`
+  --> warning: unused imports: `Duration` and `self`
+  --> src/presentation/src/cli.rs:30:19
+   |
+30 | use tokio::time::{self, Duration};
+   |                   ^^^^  ^^^^^^^^src/presentation/src/cli.rs:30:19
+   |
+30 | use tokio::time::{self, Duration};
+   |                   ^^^^  ^^^^^^^^
+
+
+
+warning: unused import: `crate::agent::*`warning: unused import: `crate::agent::*`
+  --> src/presentation/src/cli.rs:32:5
+   |
+
+  --> src/presentation/src/cli.rs:32:5
+   |
+32 | use crate::agent::*;
+   32 | use crate::agent::*;
+   |     ^^^^^^^^^^^^^^^
+
+warning|     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::session::*`
+  --> src/presentation/src/cli.rs:39:5
+   : unused import: `crate::session::*`
+  --> src/presentation/src/cli.rs:39:5
+   |
+39 | use crate::session::*;
+|
+39 | use crate::session::*;
+   |     ^^^^^^^^^^^^^^^^^
+
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `application::agent_service::IncrementalBuildPlanner`
+   --> warning: unused import: `application::agent_service::IncrementalBuildPlanner`
+   --> src/presentation/src/cli.rs:737:13
+    |
+737 src/presentation/src/cli.rs:737:13
+    |
+737 |         use application::agent_service::IncrementalBuildPlanner;
+    |         use application::agent_service::IncrementalBuildPlanner;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+|             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `infrastructure::config::Config`
+warning: unused import: `infrastructure::config::Config`
+   --> src/presentation/src/cli.rs:739:13
+       --> src/presentation/src/cli.rs:739:13
+    |
+739 | |
+739 |         use infrastructure::config::Config;
+    |                     use infrastructure::config::Config;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `application::build_service::FileOperation`
+    --> src/presentation/src/cli.rs:1795:13warning: unused import: `application::build_service::FileOperation`
+    --> src/presentation/src/cli.rs:1795:13
+     |
+1795 
+     |
+1795 |         use application::build_service::FileOperation;
+     ||         use application::build_service::FileOperation;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ConfirmationChoice` and `ask_enhanced_confirmation`
+    --> warning: unused imports: `ConfirmationChoice` and `ask_enhanced_confirmation`
+    --> src/presentation/src/cli.rs:4144:31
+     |
+4144 |src/presentation/src/cli.rs:4144:31
+     |
+4144 |             ask_confirmation, ask_enhanced_confirmation, ConfirmationChoice,
+     |             ask_confirmation, ask_enhanced_confirmation, ConfirmationChoice,
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+
+warning: unused import: `InstallationOption`
+ --> src/presentation/src/confirmation.rs:2:48warning: unused import: `InstallationOption`
+ --> src/presentation/src/confirmation.rs:2:48
+  |
+2 
+  |
+2 | use crate::types::{CommandIntent, CommandRisk, InstallationOption};
+  || use crate::types::{CommandIntent, CommandRisk, InstallationOption};
+  |                                                ^^^^^^^^^^^^^^^^^^
+
+                                                ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Write` and `self`
+ --> warning: unused imports: `Write` and `self`
+ --> src/presentation/src/editor.rs:3:15
+  |
+3src/presentation/src/editor.rs:3:15
+  |
+3 | use std::io::{self, Write};
+   | use std::io::{self, Write};
+  |               ^^^^  ^^^^^|               ^^^^  ^^^^^
+
+
+
+warning: unused imports: `ConfirmationChoice` and `ask_enhanced_confirmation`
+  --> warning: unused imports: `ConfirmationChoice` and `ask_enhanced_confirmation`
+  --> src/presentation/src/session.rs:20:50
+   |
+20src/presentation/src/session.rs:20:50
+   |
+20 |     use shared::confirmation::{ask_confirmation, ask_enhanced_confirmation, ConfirmationChoice};
+ |     use shared::confirmation::{ask_confirmation, ask_enhanced_confirmation, ConfirmationChoice};
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+
+
+warning: unused variable: `client`
+   --> src/presentation/src/cli.rs:609:13
+    |
+609warning: unused variable: `client`
+   --> src/presentation/src/cli.rs:609:13
+    |
+609 |         let client = OllamaClient::new()?;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+ |         let client = OllamaClient::new()?;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `client`
+   --> src/presentation/src/cli.rs:675:13
+    warning: unused variable: `client`
+   --> src/presentation/src/cli.rs:675:13
+    |
+675 |         let client = OllamaClient::new()?;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+
+|
+675 |         let client = OllamaClient::new()?;
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+
+error[E0609]: no field `power_user` on type `PowerUserConfig`
+    --> src/presentation/src/cli.rs:1344:32
+     |
+1344 |             match power_config.power_user.save_to_file(&path) {
+     |                                ^^^^^^^^^^ unknown field
+     |error[E0609]: no field `power_user` on type `PowerUserConfig`
+    --> src/presentation/src/cli.rs:1344:32
+     |
+1344 |             match power_config.power_user.save_to_file(&path) {
+     |                                ^^^^^^^^^^ unknown field
+     |
+     = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+
+     = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+warning: unused variable: `client`
+    --> src/presentation/src/cli.rs:2791:13
+     |
+2791 |         let client = OllamaClient::new()?;
+     |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+
+warning: unused variable: `client`
+    --> src/presentation/src/cli.rs:2791:13
+     |
+2791 |         let client = OllamaClient::new()?;
+     |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_client`
+
+warning: unused variable: `cache_hit`
+    --> src/presentation/src/cli.rs:2855:13
+     |
+2855 |         let cache_hit =
+     |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_cache_hit`
+
+warning: unused variable: `cache_hit`
+    --> src/presentation/src/cli.rs:2855:13
+     |
+2855 |         let cache_hit =
+     |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_cache_hit`
+
+warning: unused variable: `packages`
+    --> src/presentation/src/cli.rs:2863:26
+     |
+2863 |                     let (packages, services, disk_space) =
+     |                          ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_packages`
+
+warningwarning: unused variable: `packages`
+    --> src/presentation/src/cli.rs:2863:26
+     |
+2863 |                     let (packages, services, disk_space) =
+     |                          ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_packages`
+
+warning: unused variable: `services`
+    --> src/presentation/src/cli.rs:2863:36
+     |
+: unused variable: `services`
+    --> src/presentation/src/cli.rs:2863:36
+     |
+2863 |                     let (packages, services, disk_space) =
+     |2863 |                     let (packages, services, disk_space) =
+     |                                    ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_services`
+
+warning                                    ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_services`
+
+warning: unused variable: `disk_space`
+    --> src/presentation/src/cli.rs:2863:46
+     |
+2863 : unused variable: `disk_space`
+    --> src/presentation/src/cli.rs:2863:46
+     |
+2863 |                     let (packages, services, disk_space) =
+     |                                              ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_disk_space`
+
+|                     let (packages, services, disk_space) =
+     |                                              ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_disk_space`
+
+warning: unused variable: `risk`
+    --> src/presentation/src/cli.rs:3477:21
+     |
+3477warning: unused variable: `risk`
+    --> src/presentation/src/cli.rs:3477:21
+     |
+3477 |                 let risk = assess_command_risk(&command);
+     |                     ^^^^ help: if this is intentional, prefix it with an underscore: `_risk`
+
+ |                 let risk = assess_command_risk(&command);
+     |                     ^^^^ help: if this is intentional, prefix it with an underscore: `_risk`
+
+warning: unused variable: `cli`
+    --> src/presentation/src/cli.rs:4506:41
+     |
+4506 |     async fn handle_tui_mode(&mut self, cli: &Cli) -> Result<()> {
+     |                                         ^^^ help: if this is intentional, prefix it with an underscore: `_cli`
+
+warning: unused variable: `cli`
+    --> src/presentation/src/cli.rs:4506:41
+     |
+4506 |     async fn handle_tui_mode(&mut self, cli: &Cli) -> Result<()> {
+     |                                         ^^^ help: if this is intentional, prefix it with an underscore: `_cli`
+
+error[E0609]: no field `commands` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:61:10
+   |
+61 |         .commands
+   |          ^^^^^^^^ unknown field
+   |
+   = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0609]: no field `commands` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:61:10
+   |
+61 |         .commands
+   |          ^^^^^^^^ unknown field
+   |
+   = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0609]: no field `workflows` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:74:10
+   |error[E0609]: no field `workflows` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:74:10
+   |
+74 |         .workflows
+   |          ^^^^^^^^^ unknown field
+
+74 |         .workflows
+   |          ^^^^^^^^^ unknown field
+   |
+   = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+   |
+   = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0609]: no field `scripts` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:91:10
+   |
+91 |         .scripts
+   |          ^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+91 error[E0609]: no field `scripts` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+  --> src/presentation/src/web/handlers/config.rs:91:10
+   |
+91 |         .scripts
+   |          ^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+91 |         .power_user.scripts
+   |          +++++++++++
+
+|         .power_user.scripts
+   |          +++++++++++
+
+error[E0609]: no field `vosk_model_path` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:103:61
+error[E0609]: no field `vosk_model_path` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:103:61
+    |
+103 |         vosk_model_path: config.power_user.plugins.settings.vosk_model_path.clone(),
+    |                                                             ^^^^^^^^^^^^^^^ unknown field
+
+    |
+103 |         vosk_model_path: config.power_user.plugins.settings.vosk_model_path.clone(),
+    |                                                             ^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `sample_rate` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:104:57
+    |
+error[E0609]: no field `sample_rate` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:104:57
+    |
+104 |         sample_rate: config.power_user.plugins.settings.sample_rate,
+    104 |         sample_rate: config.power_user.plugins.settings.sample_rate,
+    |                                                         ^^^^^^^^^^^ unknown field|                                                         ^^^^^^^^^^^ unknown field
+
+
+
+error[E0609]: no field `audio_device` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:105:58
+    error[E0609]: no field `audio_device` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:105:58
+    |
+105 | |
+105 |         audio_device: config.power_user.plugins.settings.audio_device.clone(),
+    |                                                                  audio_device: config.power_user.plugins.settings.audio_device.clone(),
+    |                                                          ^^^^^^^^^^^^ unknown field
+
+^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:106:61
+    |
+106src/presentation/src/web/handlers/config.rs:106:61
+    |
+106 |         web_server_port: config.power_user.plugins.settings.web_server_port,
+ |         web_server_port: config.power_user.plugins.settings.web_server_port,
+    |                                                             ^^^^^^^^^^^^^^^ unknown field    |                                                             ^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]
+
+error[E0609]: no field `enable_tts` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:107:56
+: no field `enable_tts` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:107:56
+    |
+107 |    |
+107 |         enable_tts: config.power_user.plugins.settings.enable_tts,
+    |         enable_tts: config.power_user.plugins.settings.enable_tts,
+    |                                                        ^^^^^^^^^^ unknown field
+                                                        ^^^^^^^^^^ unknown field
+
+error[E0609]: no field `enable_webrtc` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+error[E0609]: no field `enable_webrtc` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:108:59
+    
+   --> src/presentation/src/web/handlers/config.rs:108:59
+    |
+108 ||
+108 |         enable_webrtc: config.power_user.plugins.settings.enable_webrtc,
+    |         enable_webrtc: config.power_user.plugins.settings.enable_webrtc,
+    |                                                           ^^^^^^^^^^^^^ unknown field
+                                                           ^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:109:63
+    |
+109 |         tailscale_enabled: config.power_user.plugins.settings.tailscale_enabled,
+    
+   --> src/presentation/src/web/handlers/config.rs:109:63
+    |
+109 |         tailscale_enabled: config.power_user.plugins.settings.tailscale_enabled,
+    |                                                               ^^^^^^^^^^^^^^^^^ unknown field
+
+|                                                               ^^^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `vosk_model_path` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:140:48error[E0609]: no field `vosk_model_path` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:140:48
+    |
+140 |             config.power_user.plugins.settings.vosk_model_path = path;
+    
+    |
+140 |             config.power_user.plugins.settings.vosk_model_path = path;
+    |                                                ^^^^^^^^^^^^^^^ unknown field
+
+|                                                ^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `sample_rate` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> error[E0609]: no field `sample_rate` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:143:48
+    |
+143 |src/presentation/src/web/handlers/config.rs:143:48
+    |
+143 |             config.power_user.plugins.settings.sample_rate = rate;
+    |                                                ^^^^^^^^^^^             config.power_user.plugins.settings.sample_rate = rate;
+    |                                                ^^^^^^^^^^^ unknown field
+
+ unknown field
+
+error[E0609]: no field `enable_tts` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   error[E0609]: no field `enable_tts` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:146:48
+    |
+146 --> src/presentation/src/web/handlers/config.rs:146:48
+    |
+146 |             config.power_user.plugins.settings.enable_tts = tts;
+    |                                                |             config.power_user.plugins.settings.enable_tts = tts;
+    |                                                ^^^^^^^^^^ unknown field
+
+^^^^^^^^^^ unknown field
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:169:53
+    |
+169 --> src/presentation/src/web/handlers/config.rs:169:53
+    |
+169 |         enabled: config.power_user.plugins.settings.tailscale_enabled,
+    ||         enabled: config.power_user.plugins.settings.tailscale_enabled,
+    |                                                     ^^^^^^^^^^^^^^^^^ unknown field
+                                                     ^^^^^^^^^^^^^^^^^ unknown field
+
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:170:55
+    |
+--> src/presentation/src/web/handlers/config.rs:170:55
+    |
+170 |         connected: config.power_user.plugins.settings.tailscale_enabled,170 |         connected: config.power_user.plugins.settings.tailscale_enabled,
+    |                                                       ^^^^^^^^^^^^^^^^^
+    |                                                       ^^^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `tailscale_hostname` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   -->  unknown field
+
+error[E0609]: no field `tailscale_hostname` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:171:54
+    |
+171 |src/presentation/src/web/handlers/config.rs:171:54
+    |
+171 |         hostname: config.power_user.plugins.settings.tailscale_hostname.clone(),
+    |                                                      ^^^^^^^^^^^^^^^^^^         hostname: config.power_user.plugins.settings.tailscale_hostname.clone(),
+    |                                                      ^^^^^^^^^^^^^^^^^^ unknown field
+
+ unknown field
+
+error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:172:50
+    |
+172 --> src/presentation/src/web/handlers/config.rs:172:50
+    |
+172 |         port: config.power_user.plugins.settings.web_server_port,
+    |                                                  |         port: config.power_user.plugins.settings.web_server_port,
+    |                                                  ^^^^^^^^^^^^^^^ unknown field
+
+^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:190:40
+    |
+190 | src/presentation/src/web/handlers/config.rs:190:40
+    |
+190 |     config.power_user.plugins.settings.tailscale_enabled = request.enabled;
+    |                                        ^^^^^^^^^^^^^^^^^     config.power_user.plugins.settings.tailscale_enabled = request.enabled;
+    |                                        ^^^^^^^^^^^^^^^^^ unknown field
+
+unknown field
+
+error[E0609]: no field `tailscale_hostname` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   error[E0609]: no field `tailscale_hostname` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:192:44
+    |
+192 |--> src/presentation/src/web/handlers/config.rs:192:44
+    |
+192 |         config.power_user.plugins.settings.tailscale_hostname = Some(hostname);
+    |                                            ^^^^^^^^^^^^^^^^^^         config.power_user.plugins.settings.tailscale_hostname = Some(hostname);
+    |                                            ^^^^^^^^^^^^^^^^^^ unknown field
+
+ unknown field
+
+error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:195:44error[E0609]: no field `web_server_port` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+   --> src/presentation/src/web/handlers/config.rs:195:44
+    |
+195 | 
+    |
+195 |         config.power_user.plugins.settings.web_server_port = port;
+    |                                            ^^^^^^^^^^^^^^^ unknown field        config.power_user.plugins.settings.web_server_port = port;
+    |                                            ^^^^^^^^^^^^^^^ unknown field
+
+
+
+error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:242:23
+    |error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:242:23
+    |
+242 |     config.power_user.commands.push(command);
+    |                       ^^^^^^^^ unknown field
+
+242 |     config.power_user.commands.push(command);
+    |                       ^^^^^^^^ unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:245:44
+    |
+245 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:245:44
+    |
+245 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |                 pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+^^^^^^^^^^^^
+
+error[E0609]: no field `commands` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:262:10
+    |
+262 |         .commands
+    |          ^^^^^^^^ unknown field
+    |
+error[E0609]: no field `commands` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:262:10
+    |
+262 |         .commands
+    |          ^^^^^^^^ unknown field
+    |
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:281:44
+    |
+281 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:281:44
+    |
+281 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+|                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:295:41
+    |
+295 |     let initial_len = config.power_user.commands.len();
+    |                                         ^^^^^^^^error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:295:41
+    |
+295 |     let initial_len = config.power_user.commands.len();
+    |                                         ^^^^^^^^ unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+ unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:296:23
+    error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:296:23
+    |
+296 ||
+296 |     config.power_user.commands.retain(|c| c.id != id);
+         config.power_user.commands.retain(|c| c.id != id);
+    |                       ^^^^^^^^ unknown field|                       ^^^^^^^^ unknown field
+    |
+    
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+= note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:298:26
+    |
+298src/presentation/src/web/handlers/config.rs:298:26
+    |
+298 |     if config.power_user.commands.len() == initial_len {
+ |     if config.power_user.commands.len() == initial_len {
+    |                          ^^^^^^^^ unknown field    |                          ^^^^^^^^ unknown field
+    |
+    = 
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:303:44
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:303:44
+    |
+303 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |
+303 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |    |                               |
+    |                               arguments to this method are incorrect
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `
+    = note: expected reference `&PathBuf`
+               found reference `&'static str&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   `
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |--> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 | 
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |                pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+^^^^^^^^^^^^
+
+error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:316:39error[E0609]: no field `commands` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:316:39
+    |
+316 |
+    |
+316 |         "commands": config.power_user.commands
+    |         "commands": config.power_user.commands
+    |                                       ^^^^^^^^ unknown field
+                                       ^^^^^^^^ unknown field
+    |
+    = note    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0609]: no field `commands` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> error[E0609]: no field `commands` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:327:10
+    |
+327src/presentation/src/web/handlers/config.rs:327:10
+    |
+327 |         .commands
+ |         .commands
+    |          ^^^^^^^^     |          ^^^^^^^^ unknown field
+    |
+    unknown field
+    |
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+= note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:372:23
+    |
+372 | src/presentation/src/web/handlers/config.rs:372:23
+    |
+372 |     config.power_user.workflows.push(workflow);
+    |                       ^^^^^^^^^    config.power_user.workflows.push(workflow);
+    |                       ^^^^^^^^^ unknown field
+    | unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:375:44
+    |
+375 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:375:44
+    |
+375 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 | |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+    pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+error[E0609]: no field `workflows` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:392:10
+    |
+392 |         .workflows
+    |          ^^^^^^^^^ unknown field
+error[E0609]: no field `workflows` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:392:10
+    |
+392 |         .workflows
+    |          ^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+    |
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+error[E0308]: mismatched types
+   --> error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:408:44
+    |
+408 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------src/presentation/src/web/handlers/config.rs:408:44
+    |
+408 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    
+    |
+    = note: expected reference `&PathBuf= note: expected reference `&PathBuf`
+               found reference `&'static str`
+               found reference `&'static str`
+note: method defined here`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+
+    |
+856 | 856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+        pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+|            ^^^^^^^^^^^^
+
+
+error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:422:41error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:422:41
+    |
+422 |     let initial_len = config.power_user.workflows.len();
+    |
+422 |     let initial_len = config.power_user.workflows.len();
+    |                                         ^^^^^^^^^ 
+    |                                         ^^^^^^^^^ unknown field
+    |
+    unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+= note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:423:23error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:423:23
+    |
+423 | 
+    |
+423 |     config.power_user.workflows.retain(|w| w.id != id);
+    |                       ^^^^^^^^^    config.power_user.workflows.retain(|w| w.id != id);
+    |                       ^^^^^^^^^ unknown field
+    |
+ unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:425:26error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:425:26
+    |
+425 
+    |
+425 |     if config.power_user.workflows.len() == initial_len {
+    |     if config.power_user.workflows.len() == initial_len {
+    |                          ^^^^^^^^^ unknown field|                          ^^^^^^^^^ unknown field
+    |
+    = 
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:430:44
+    |
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:430:44
+    |
+430 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = 430 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:443:40
+    |
+443error[E0609]: no field `workflows` on type `PowerUserConfig`
+   --> src/presentation/src/web/handlers/config.rs:443:40
+    |
+443 |         "workflows": config.power_user.workflows
+    |                                        ^^^^^^^^^ unknown field |         "workflows": config.power_user.workflows
+    |                                        ^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+    |
+    = note: available fields are: `aliases`, `shortcuts`, `theme`, `plugins`, `performance` ... and 4 others
+
+
+
+error[E0609]: no field `workflows` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> error[E0609]: no field `workflows` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:454:10
+    |
+src/presentation/src/web/handlers/config.rs:454:10
+    |
+454 |         .workflows454 |         .workflows
+    |          ^^^^^^^^^ 
+    |          ^^^^^^^^^ unknown field
+    |
+unknown field
+    |
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+    = note: available fields are: `ollama_base_url`, `ollama_model`, `db_path`, `rag_include_patterns`, `rag_exclude_patterns` ... and 4 others
+
+
+error[E0560]: struct `ScriptConfig` has no field named `id`
+   --> error[E0560]: struct `ScriptConfig` has no field named `id`
+   --> src/presentation/src/web/handlers/config.rs:498:9
+    |
+498 src/presentation/src/web/handlers/config.rs:498:9
+    |
+498 |         id: uuid::Uuid::new_v4().to_string(),
+    |         id: uuid::Uuid::new_v4().to_string(),
+    |         ^^ `ScriptConfig` does not have this field
+|         ^^ `ScriptConfig` does not have this field
+    |
+    =     |
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+note: available fields are: `scripts`, `macros`, `execution`
+
+error[E0560]: struct `ScriptConfig` has no field named `name`
+   --> error[E0560]: struct `ScriptConfig` has no field named `name`
+   --> src/presentation/src/web/handlers/config.rs:499:9
+    |
+src/presentation/src/web/handlers/config.rs:499:9
+    |
+499 | 499 |         name: request.name,
+    |        name: request.name,
+    |         ^^^^ `ScriptConfig` does not have this field         ^^^^ `ScriptConfig` does not have this field
+    |
+
+    |
+    = note: available fields are: `scripts`, `macros`, `execution`
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+error[E0560]
+error[E0560]: struct `ScriptConfig` has no field named `script_type`
+   --> : struct `ScriptConfig` has no field named `script_type`
+   --> src/presentation/src/web/handlers/config.rs:500:9
+    src/presentation/src/web/handlers/config.rs:500:9
+    |
+500 |
+500 |         script_type,
+|         script_type,
+    |         ^^^^^^^^^^^    |         ^^^^^^^^^^^ `ScriptConfig` does not have this field
+     `ScriptConfig` does not have this field
+    |
+    = note|
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+: available fields are: `scripts`, `macros`, `execution`
+
+error[E0560]: struct `ScriptConfig` has no field named `content`
+error[E0560]: struct `ScriptConfig` has no field named `content`
+   --> src/presentation/src/web/handlers/config.rs:501:9
+   --> src/presentation/src/web/handlers/config.rs:501:9
+    |
+501 |         content: request.content,    |
+501 |         content: request.content,
+    |         ^^^^^^^
+    |         ^^^^^^^ `ScriptConfig` does not have this field
+     `ScriptConfig` does not have this field
+    |
+    = note: available fields are: `scripts`, `macros`, `execution`|
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+error[E0560]
+
+error[E0560]: struct `ScriptConfig` has no field named `description`
+   --> src/presentation/src/web/handlers/config.rs:502:9
+: struct `ScriptConfig` has no field named `description`
+   --> src/presentation/src/web/handlers/config.rs:502:9
+    |
+502 |    |
+502 |         description: request.description.unwrap_or_default(),
+    |         description: request.description.unwrap_or_default(),
+    |         ^^^^^^^^^^^ `ScriptConfig` does not have this field
+             ^^^^^^^^^^^ `ScriptConfig` does not have this field
+    |
+    = note|
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+: available fields are: `scripts`, `macros`, `execution`
+
+error[E0560]: struct `ScriptConfig` has no field named `enabled`
+   --> error[E0560]: struct `ScriptConfig` has no field named `enabled`
+   --> src/presentation/src/web/handlers/config.rs:503:9
+    |
+503 src/presentation/src/web/handlers/config.rs:503:9
+    |
+503 |         enabled: true,
+    |         enabled: true,
+    |         ^^^^^^^ `ScriptConfig` does not have this field
+|         ^^^^^^^ `ScriptConfig` does not have this field
+    |
+        |
+    = note: available fields are: `scripts`, `macros`, `execution`
+= note: available fields are: `scripts`, `macros`, `execution`
+
+
+error[E0609]: no field `id` on type `ScriptConfig`
+   --> error[E0609]: no field `id` on type `ScriptConfig`
+   --> src/presentation/src/web/handlers/config.rs:506:21
+    |
+src/presentation/src/web/handlers/config.rs:506:21
+    |
+506 |     let id = script.id.clone();
+506 |     let id = script.id.clone();
+    |                     ^^     |                     ^^ unknown field
+    |
+    unknown field
+    |
+    = note: available fields are: `scripts`, `macros`, `execution`
+
+= note: available fields are: `scripts`, `macros`, `execution`
+
+error[E0599]: no method named `push` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:507:31
+    |
+507 |     config.power_user.scripts.push(script);
+    |                               ^^^^ method not found in `ScriptConfig`
+
+error[E0599]: no method named `push` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:507:31
+    |
+507 |     config.power_user.scripts.push(script);
+    |                               ^^^^ method not found in `ScriptConfig`
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:510:44
+    |
+510 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:510:44
+    |
+510 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^ |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+
+
+error[E0609]: no field `scripts` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:527:10
+    |
+527 |         .scripts
+    |          ^^^^^^^ unknown field
+    |error[E0609]: no field `scripts` on type `tokio::sync::RwLockWriteGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:527:10
+    |
+527 |         .scripts
+    |          ^^^^^^^ unknown field
+    |
+help: one of the expressions' fields has a field of the same name
+    |
+527 |         .power_user.scripts
+    |
+help: one of the expressions' fields has a field of the same name
+    |
+527 |         .power_user.scripts
+    |          +++++++++++
+
+          +++++++++++
+
+error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:543:44
+    |
+543 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:543:44
+    |
+543 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    |                               |
+    |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 | |                               arguments to this method are incorrect
+    |
+    = note: expected reference `&PathBuf`
+               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+    pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+error[E0599]: no method named `len` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:557:49
+error[E0599]: no method named `len` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:557:49
+    |
+557 |     let initial_len = config.power_user.scripts.len();
+    |                                                 ^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+557 |     let initial_len = config.power_user.scripts.execution.    |
+557 |     let initial_len = config.power_user.scripts.len();
+    |                                                 ^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+557 |     let initial_len = config.power_user.scripts.execution.len();
+    |                                                 ++++++++++
+len();
+    |                                                 ++++++++++
+557 |     let initial_len = config.power_user.scripts.macros.557 |     let initial_len = config.power_user.scripts.macros.len();
+    |                                                 +++++++
+len();
+    |                                                 +++++++
+557 |     let initial_len = config.power_user.scripts.scripts.557 |     let initial_len = config.power_user.scripts.scripts.len();
+    |                                                 ++++++++len();
+    |                                                 ++++++++
+
+
+
+error[E0599]: no method named `retain` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:558:31
+    error[E0599]: no method named `retain` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:558:31
+    |
+558 |     config.power_user.scripts.retain(|s| s.id != id);
+    |                               ^^^^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+558 |     config.power_user.scripts.execution.retain(|s| s.id != id);
+    |                               ++++++++++
+558 |     config.power_user.scripts.macros.retain(|s| s.id != id);
+    |                               +++++++
+558 |     config.power_user.scripts.|
+558 |     config.power_user.scripts.retain(|s| s.id != id);
+    |                               ^^^^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+558 |     config.power_user.scripts.execution.retain(|s| s.id != id);
+    |                               ++++++++++
+558 |     config.power_user.scripts.macros.retain(|s| s.id != id);
+    |                               +++++++
+558 |     config.power_user.scripts.scripts.retain(|s| s.id != id);
+    |scripts.retain(|s| s.id != id);
+    |                               ++++++++
+                               ++++++++
+
+
+error[E0599]: no method named `len` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:560:34error[E0599]: no method named `len` found for struct `ScriptConfig` in the current scope
+   --> src/presentation/src/web/handlers/config.rs:560:34
+    |
+560 |     if config.power_user.scripts.len() == initial_len {
+    |                                  ^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+560 |     if config.power_user.scripts.execution.len() == initial_len {
+    
+    |
+560 |     if config.power_user.scripts.len() == initial_len {
+    |                                  ^^^ method not found in `ScriptConfig`
+    |
+help: some of the expressions' fields have a method of the same name
+    |
+560 |     if config.power_user.scripts.execution.len() == initial_len {
+    |                                  ++++++++++
+560 |     if config.power_user.scripts.macros.|                                  ++++++++++
+560 |     if config.power_user.scripts.macros.len() == initial_len {
+    |                                  +++++++len() == initial_len {
+    |                                  +++++++
+560 |     if config.power_user.scripts.scripts.
+560 |     if config.power_user.scripts.scripts.len() == initial_len {
+    |                                  ++++++++
+len() == initial_len {
+    |                                  ++++++++
+
+
+error[E0308]: mismatched types
+   --> error[E0308]: mismatched types
+   --> src/presentation/src/web/handlers/config.rs:565:44
+    |
+565 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^src/presentation/src/web/handlers/config.rs:565:44
+    |
+565 |     let _ = config.power_user.save_to_file("config/system.json");
+    |                               ------------ ^^^^^^^^^^^^^^^^^^^^ expected `&PathBuf`, found `&str`
+    | expected `&PathBuf`, found `&str`
+    |                               |
+    |                               |
+    |                               arguments to this method are incorrect
+                                   arguments to this method are incorrect
+    |
+    = note|
+    = note: expected reference `&PathBuf`
+: expected reference `&PathBuf`
+               found reference `&'static str`
+note               found reference `&'static str`
+note: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12: method defined here
+   --> /home/rendi/projects/bro/src/infrastructure/src/config.rs:856:12
+    |
+856
+    |
+856 |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+ |     pub fn save_to_file(&self, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    |            ^^^^^^^^^^^^
+
+    |            ^^^^^^^^^^^^
+
+error[E0609]: no field `scripts` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:589:10
+    error[E0609]: no field `scripts` on type `tokio::sync::RwLockReadGuard<'_, infrastructure::config::Config>`
+   --> src/presentation/src/web/handlers/config.rs:589:10
+    |
+589 |         .scripts
+    |          ^^^^^^^ unknown field
+    |
+help: one of the expressions' fields has a field of the same name
+    ||
+589 |         .scripts
+    |          ^^^^^^^ unknown field
+    |
+help: one of the expressions' fields has a field of the same name
+    |
+589 |         .power_user.
+589 |         .power_user.scripts
+    |          scripts
+    |          +++++++++++
+
++++++++++++
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/handlers/health.rs:22:65
+   |
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/handlers/health.rs:22:65
+   |
+22 |         "tailscale_enabled": config.power_user.plugins.settings.tailscale_enabled
+   |                                                                 ^^^^^^^^^^^^^^^^^ unknown field
+
+22 |         "tailscale_enabled": config.power_user.plugins.settings.tailscale_enabled
+   |                                                                 ^^^^^^^^^^^^^^^^^ unknown field
+
+error[E0616]: field `text_to_speech` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:38:10
+   |
+38error[E0616]: field `text_to_speech` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:38:10
+   |
+38 |         .text_to_speech
+   |          ^^^^^^^^^^^^^^ private field
+
+ |         .text_to_speech
+   |          ^^^^^^^^^^^^^^ private field
+
+error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+  --> src/presentation/src/web/handlers/tts.rs:42:12
+   |error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+  --> src/presentation/src/web/handlers/tts.rs:42:12
+   |
+42 |         Ok(samples) => {
+   |            ^^^^^^^ doesn't have a size known at compile-time
+   |
+   
+42 |         Ok(samples) => {
+   |            ^^^^^^^ doesn't have a size known at compile-time
+   |
+   = help: the trait `Sized` is not implemented for `[i16]`
+   = help: the trait `Sized` is not implemented for `[i16]`
+   = note: all local variables must have a statically known size
+
+= note: all local variables must have a statically known size
+
+error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:42:9
+    |
+ 42 |error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:42:9
+    |
+ 42 |         Ok(samples) => {
+    |         ^^^^^^^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `[i16]`
+note: required by a bound in `std::prelude::v1::Ok`
+         Ok(samples) => {
+    |         ^^^^^^^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `[i16]`
+note: required by a bound in `std::prelude::v1::Ok`
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    |
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    |
+548 | pub enum Result<T, E> {
+    548 | pub enum Result<T, E> {
+    |                 ^ required by this bound in `std::prelude::v1::Ok`
+|                 ^ required by this bound in `std::prelude::v1::Ok`
+...
+552 | ...
+552 |     Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     --     Ok(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     -- required by a bound in this tuple variant
+
+required by a bound in this tuple variant
+
+error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:52:9
+    |
+ 52 |error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:52:9
+    |
+ 52 |         Err(e) => {
+    |         ^^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `[i16]`
+note: required by a bound in `Err`
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    |
+548 | pub enum Result<T, E> {
+    |                 ^ required by this bound in `Err`
+...         Err(e) => {
+    |         ^^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `[i16]`
+note: required by a bound in `Err`
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    |
+548 | pub enum Result<T, E> {
+    |                 ^ required by this bound in `Err`
+...
+557 |     Err(#[stable(feature = "rust1", since = "1.0.0")] E),
+557 |     Err(#[stable(feature = "rust1", since = "1.0.0")] E),
+    |     --- 
+    |     --- required by a bound in this tuple variant
+
+required by a bound in this tuple variant
+
+error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:40:10
+    |
+ 40 error[E0277]: the size for values of type `[i16]` cannot be known at compilation time
+   --> src/presentation/src/web/handlers/tts.rs:40:10
+    |
+ 40 |         .await
+    |          ^^^^^ doesn't have a size known at compile-time
+    |
+    |         .await
+    |          ^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `[i16]`
+note: required by an implicit `Sized` bound in `std::result::Result`= help: the trait `Sized` is not implemented for `[i16]`
+note: required by an implicit `Sized` bound in `std::result::Result`
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/result.rs:548:17
+    |
+548 ||
+548 | pub enum Result<T, E> {
+    |                 ^ pub enum Result<T, E> {
+    |                 ^ required by the implicit `Sized` requirement on this type parameter in `Result`
+
+ required by the implicit `Sized` requirement on this type parameter in `Result`
+
+error[E0616]: field `command_interpreter` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:76:10
+   |
+76 |         .command_interpreter
+error[E0616]: field `command_interpreter` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:76:10
+   |
+76 |         .command_interpreter
+   |          ^^^^^^^^^^^^^^^^^^^ private field
+
+   |          ^^^^^^^^^^^^^^^^^^^ private field
+
+error[E0616]: field `text_to_speech` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:96:10
+   |
+96 |error[E0616]: field `text_to_speech` of struct `VoiceCommandProcessor` is private
+  --> src/presentation/src/web/handlers/tts.rs:96:10
+   |
+96 |         .text_to_speech
+   |          ^^^^^^^^^^^^^^ private field
+
+         .text_to_speech
+   |          ^^^^^^^^^^^^^^ private field
+
+error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/mod.rs:38:58
+   |
+38 |         let addr = if config.power_user.plugins.settings.tailscale_enabled {error[E0609]: no field `tailscale_enabled` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/mod.rs:38:58
+   |
+38 |         let addr = if config.power_user.plugins.settings.tailscale_enabled {
+   |                                                          ^^^^^^^^^^^^^^^^^ unknown field
+
+
+   |                                                          ^^^^^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `web_server_bind` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/mod.rs:39:77
+   |
+39 |             if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
+   |error[E0609]: no field `web_server_bind` on type `HashMap<std::string::String, HashMap<std::string::String, std::string::String>>`
+  --> src/presentation/src/web/mod.rs:39:77
+   |
+39 |             if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
+   |                                                                             ^^^^^^^^^^^^^^^ unknown field
+
+                                                                             ^^^^^^^^^^^^^^^ unknown field
+
+error[E0277]: the size for values of type `str` cannot be known at compilation time
+   --> src/presentation/src/web/mod.rs:39:20
+    |
+ 39 |error[E0277]: the size for values of type `str` cannot be known at compilation time
+   --> src/presentation/src/web/mod.rs:39:20
+    |
+ 39 |             if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
+    |                    ^^^^^^^^^^^^^^^^^^^ doesn't have a size known at compile-time
+    |
+    =              if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
+    |                    ^^^^^^^^^^^^^^^^^^^ doesn't have a size known at compile-time
+    |
+    = help: the trait `Sized` is not implemented for `str`
+note: required by a bound in `std::prelude::v1::Some`
+   help: the trait `Sized` is not implemented for `str`
+note: required by a bound in `std::prelude::v1::Some`
+   --> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/option.rs:593:17
+    |
+--> /home/rendi/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/option.rs:593:17
+    |
+593 | pub enum Option<T> {
+593 | pub enum Option<T> {
+    |                 ^ required by this bound in `std::prelude::v1::Some`    |                 ^ required by this bound in `std::prelude::v1::Some`
+...
+601 |
+...
+601 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |          Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ---- required by a bound in this tuple variant
+
+---- required by a bound in this tuple variant
+
+error[E0599]: no function or associated item named `default` found for struct `VoiceCommandProcessor` in the current scope
+  --> src/presentation/src/web/state.rs:28:62
+   |
+28 |             voice_processor: Arc::new(VoiceCommandProcessor::default()),
+   |                                                              ^^^^^^^ function or associated item not found in `VoiceCommandProcessor`
+error[E0599]: no function or associated item named `default` found for struct `VoiceCommandProcessor` in the current scope
+  --> src/presentation/src/web/state.rs:28:62
+   |
+28 |             voice_processor: Arc::new(VoiceCommandProcessor::default()),
+   |                                                              ^^^^^^^ function or associated item not found in `VoiceCommandProcessor`
+   |
+note: if you're trying to build a new `VoiceCommandProcessor`, consider using `VoiceCommandProcessor::new` which returns `VoiceCommandProcessor`
+  --> /home/rendi/projects/bro/src/application/src/voice_command_processor.rs:34:5
+   |
+34 | /     pub fn new(
+35 | |         speech_recognition: Arc<dyn SpeechRecognitionService>,
+36 | |         text_to_speech: Arc<dyn TextToSpeechService>,   |
+note: if you're trying to build a new `VoiceCommandProcessor`, consider using `VoiceCommandProcessor::new` which returns `VoiceCommandProcessor`
+  --> /home/rendi/projects/bro/src/application/src/voice_command_processor.rs:34:5
+   |
+34 | /     pub fn new(
+35 | |         speech_recognition: Arc<dyn SpeechRecognitionService>,
+36 | |         text_to_speech: Arc<dyn TextToSpeechService>,
+37 | 
+37 | |         command_interpreter: Arc<dyn CommandInterpreter>,
+|         command_interpreter: Arc<dyn CommandInterpreter>,
+...  |
+41 | |         plugin_registry: Arc<PluginRegistry>,
+42 | |     ) -> Self {
+   | |_____________^
+
+...  |
+41 | |         plugin_registry: Arc<PluginRegistry>,
+42 | |     ) -> Self {
+   | |_____________^
+
+warning: unused import: `Hasher`
+  --> src/presentation/src/cli.rs:24:23
+   |
+24 | use std::hash::{Hash, Hasher};
+   |                       ^^^^^^
+
+warning: unused import: `Hasher`
+  --> src/presentation/src/cli.rs:24:23
+   |
+24 | use std::hash::{Hash, Hasher};
+   |                       ^^^^^^
+
+warning: unused variable: `original_task`
+  --> src/presentation/src/agent.rs:91:48
+   |
+91 | pub fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+   |                                                ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+warning: unused variable: `original_task`
+  --> src/presentation/src/agent.rs:91:48
+   |
+91 | pub fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+   |                                                ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+
+
+warning: unused variable: `original_task`
+  --> src/presentation/src/cli/agent.rs:91:48
+   |
+91 | pub fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+   |                                                ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+
+warning: unused variable: `original_task`
+  --> src/presentation/src/cli/agent.rs:91:48
+   |
+91 | pub fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+   |                                                ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+
+warning: unused variable: `original_task`
+   --> src/presentation/src/cli.rs:151:44
+    |
+151 | fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+    |                                            ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+warning: unused variable: `original_task`
+   --> src/presentation/src/cli.rs:151:44
+    |
+151 | fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+    |                                            ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_original_task`
+
+
+warning: unused variable: `desc`
+    --> src/presentation/src/cli.rs:2147:25
+     |
+2147 |warning: unused variable: `desc`
+    --> src/presentation/src/cli.rs:2147:25
+     |
+2147 |                     let desc = parts[1..].join(" ");
+     |                         ^^^^ help: if this is intentional, prefix it with an underscore: `_desc`
+
+                     let desc = parts[1..].join(" ");
+     |                         ^^^^ help: if this is intentional, prefix it with an underscore: `_desc`
+
+warning: unused variable: `query_lower`
+    --> src/presentation/src/cli.rs:3754:13
+     |
+3754 warning: unused variable: `query_lower`
+    --> src/presentation/src/cli.rs:3754:13
+     |
+3754 |         let query_lower = original_query.to_lowercase();
+     |             ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_query_lower`
+
+|         let query_lower = original_query.to_lowercase();
+     |             ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_query_lower`
+
+warning: unused variable: `git_status`
+    --> src/presentation/src/cli.rs:4371:13
+     |
+warning: unused variable: `git_status`
+    --> src/presentation/src/cli.rs:4371:13
+     |
+4371 |         let git_status = if std::path::Path::new(".git").exists() {
+     |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_git_status`
+
+warning: unused variable: `session_status`
+    --> src/presentation/src/cli.rs:4378:13
+     |
+4378 |         let session_status = if self.session_store.is_some() {
+     |4371 |         let git_status = if std::path::Path::new(".git").exists() {
+     |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_git_status`
+
+warning: unused variable: `session_status`
+    --> src/presentation/src/cli.rs:4378:13
+     |
+4378 |         let session_status = if self.session_store.is_some() {
+     |             ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_session_status`
+
+             ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_session_status`
+
+warning: unused variable: `safety_desc`
+  --> warning: unused variable: `safety_desc`
+  --> src/presentation/src/confirmation.rs:34:9
+   |
+34 |     let safety_desc = match risk {
+   |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_safety_desc`
+
+src/presentation/src/confirmation.rs:34:9
+   |
+34 |     let safety_desc = match risk {
+   |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_safety_desc`
+
+warningwarning: unused variable: `query`
+ : unused variable: `query`
+ --> src/presentation/src/confirmation.rs:8:5
+  |--> src/presentation/src/confirmation.rs:8:5
+  |
+8 |
+8 |     query: &str,
+       query: &str,
+  |     ^^^^^ |     ^^^^^ help: if this is intentional, prefix it with an underscore: `_query`
+
+help: if this is intentional, prefix it with an underscore: `_query`
+
+warning: unused variable: `intent`
+  --> warning: unused variable: `intent`
+  --> src/presentation/src/confirmation.rs:53:5
+   |
+53 src/presentation/src/confirmation.rs:53:5
+   |
+53 |     intent: CommandIntent,
+|     intent: CommandIntent,
+   |     ^^^^^^    |     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_intent`
+
+help: if this is intentional, prefix it with an underscore: `_intent`
+
+Some errors have detailed explanations: E0277, E0308, E0560, E0599, E0609, E0616.
+Some errors have detailed explanations: E0277, E0308, E0560, E0599, E0609, E0616.
+For more information about an error, try `rustc --explain E0277`.
+For more information about an error, try `rustc --explain E0277`.
+warning: `presentation` (lib) generated 41 warnings
+warning: `presentation` (lib) generated 41 warnings
+error: could not compile `presentation` (lib) due to 69 previous errors; 41 warnings emitted
+error: could not compile `presentation` (lib) due to 69 previous errors; 41 warnings emitted

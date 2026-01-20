@@ -19,6 +19,6 @@ pub async fn ready_check(State(state): State<AppState>) -> Json<Value> {
         "status": "ready",
         "voice_model_loaded": true,
         "config_loaded": true,
-        "tailscale_enabled": config.power_user.plugins.settings.tailscale_enabled
+        "tailscale_enabled": config.power_user.plugins.settings.get("tailscale").unwrap_or(&std::collections::HashMap::new()).get("enabled").unwrap_or(&"false".to_string()) == "true"
     }))
 }
