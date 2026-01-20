@@ -21,7 +21,7 @@ use shared::confirmation::ask_confirmation;
 use shared::types::Result;
 use shared::ultra_fast_cache::UltraFastCache;
 use std::collections::{HashMap, HashSet};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -148,7 +148,7 @@ OUTPUT ONLY VALID JSON:"#,
 }
 
 /// Enhance agent plan with additional analysis and safety checks
-fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+fn enhance_agent_plan(mut plan: AgentPlan, _original_task: &str) -> AgentPlan {
     // Re-assess risk levels and add rollback commands
     for step in &mut plan.steps {
         let assessed_risk = assess_agent_command_risk(&step.command);
@@ -2157,7 +2157,7 @@ impl CliApp {
                         println!("Usage: a <description>");
                         continue;
                     }
-                    let desc = parts[1..].join(" ");
+                    let _desc = parts[1..].join(" ");
                     println!(
                         "Add step functionality not yet implemented. Use full plan edit instead."
                     );
@@ -2865,7 +2865,7 @@ impl CliApp {
 
         // Ultra-fast cached command lookup with performance monitoring
         GLOBAL_METRICS.start_operation("cache_lookup").await;
-        let cache_hit =
+        let _cache_hit =
             Self::load_cached(&self.cache_path, &effective_query).is_ok_and(|opt| opt.is_some());
         GLOBAL_METRICS.end_operation("cache_lookup").await;
 
@@ -2873,7 +2873,7 @@ impl CliApp {
             // Use enhanced confirmation system based on intent
             let confirmed = match query_intent {
                 CommandIntent::Installation => {
-                    let (packages, services, disk_space) =
+                    let (_packages, _services, _disk_space) =
                         analyze_installation_command(&cached_command);
                     let risk = assess_command_risk(&cached_command);
                     prompt_data_collection_confirmation(&cached_command, &effective_query, risk)?
@@ -3487,7 +3487,7 @@ COMMAND:"#,
 
                 // Analyze the installation command
                 let (packages, services, disk_space) = analyze_installation_command(&command);
-                let risk = assess_command_risk(&command);
+                let _risk = assess_command_risk(&command);
 
                 // Present installation confirmation
                 let confirmed = prompt_installation_confirmation(
@@ -3764,7 +3764,7 @@ COMMAND:"#,
 
     fn show_post_installation_steps(&self, command: &str, original_query: &str) {
         let cmd_lower = command.to_lowercase();
-        let query_lower = original_query.to_lowercase();
+        let _query_lower = original_query.to_lowercase();
 
         println!();
         println!("Next steps suggested:");
@@ -4381,14 +4381,14 @@ COMMAND:"#,
         println!("\n{}Background Intelligence:", "🧠 ".bright_blue());
 
         // Check git status
-        let git_status = if std::path::Path::new(".git").exists() {
+        let _git_status = if std::path::Path::new(".git").exists() {
             format!("{} Git repository active", "✅".green())
         } else {
             format!("{} Git not initialized", "⚠️".yellow())
         };
 
         // Check session store status
-        let session_status = if self.session_store.is_some() {
+        let _session_status = if self.session_store.is_some() {
             format!("{} Session persistence active", "✅".green())
         } else {
             format!("{} Session store unavailable", "❌".red())

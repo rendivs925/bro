@@ -4,7 +4,7 @@ use std::time::Duration;
 use anyhow::Result;
 use crossterm::{
     cursor::{Hide, Show},
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
+    event::{self, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -21,7 +21,6 @@ use crate::cli::{Cli, CliApp};
 use clap::Parser;
 use infrastructure::config::Config;
 use serde::{Deserialize, Serialize};
-use shared::confirmation;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IntentType {
@@ -68,6 +67,7 @@ pub struct TuiApp {
     command_history: Vec<String>,
     history_index: Option<usize>,
     tui_mode: Option<String>, // Current TUI mode (plan, build, run, chat, etc.)
+    pending_action: Option<PendingAction>, // Action confirmed but not yet executed
 }
 
 /// TUI runner that manages the terminal
@@ -89,13 +89,37 @@ pub enum Overlay {
     Tools,
     Context,
     Palette,
+    Confirmation {
+        message: String,
+        default_yes: bool,
+        action: PendingAction,
+    },
+    Response {
+        title: String,
+        content: String,
+        scroll_offset: usize,
+    },
+    Thinking {
+        message: String,
+        step: usize,
+    },
+}
+
+#[derive(Debug, Clone)]
+pub enum PendingAction {
+    Command(String),
+    FileRead(String),
+    FileEdit(String),
+    FileSearch(String),
+    MultiStep(String),
+    Unknown(String),
 }
 
 impl TuiApp {
     /// Create a new TUI application state
-    pub fn new(cli: Cli) -> Result<Self> {
-        let mut cli_app = CliApp::new();
-        let config = Config::new(true, true, false); // safe_mode=true, cache_enabled=true, copy=false
+    pub fn new(_cli: Cli) -> Result<Self> {
+        let cli_app = CliApp::new();
+        let config = Config::load(); // safe_mode=true, cache_enabled=true, copy=false
 
         // Initialize CLI app with the parsed CLI args
         // Note: We'll handle the TUI-specific logic separately
@@ -110,15 +134,12 @@ impl TuiApp {
                 "INSERT - Type your command, press Enter to execute, Esc for normal mode"
                     .to_string(),
             show_overlay: None,
-            session_list: vec![
-                "default_session".to_string(),
-                "project-x".to_string(),
-                "debug-session".to_string(),
-            ],
-            current_session: Some("default_session".to_string()),
+            session_list: vec!["default".to_string()],
+            current_session: Some("default".to_string()),
             command_history: Vec::new(),
             history_index: None,
             tui_mode: None,
+            pending_action: None,
         })
     }
 }
@@ -137,12 +158,7 @@ impl TuiRunner {
     pub async fn run(&mut self) -> Result<()> {
         // Setup terminal
         enable_raw_mode()?;
-        execute!(
-            self.terminal.backend_mut(),
-            EnterAlternateScreen,
-            EnableMouseCapture,
-            Show
-        )?;
+        execute!(self.terminal.backend_mut(), EnterAlternateScreen, Show)?;
         self.terminal.clear()?;
 
         // Main event loop
@@ -175,12 +191,7 @@ impl TuiRunner {
 
         // Cleanup
         disable_raw_mode()?;
-        execute!(
-            self.terminal.backend_mut(),
-            LeaveAlternateScreen,
-            DisableMouseCapture,
-            Show
-        )?;
+        execute!(self.terminal.backend_mut(), LeaveAlternateScreen, Show)?;
 
         Ok(())
     }
@@ -388,6 +399,15 @@ impl TuiRunner {
                         Overlay::Palette => {
                             self.handle_palette_overlay_key(c);
                         }
+                        Overlay::Confirmation { .. } => {
+                            self.handle_confirmation_overlay_key(c);
+                        }
+                        Overlay::Response { .. } => {
+                            self.handle_response_overlay_key(c);
+                        }
+                        Overlay::Thinking { .. } => {
+                            // Thinking overlay doesn't handle input
+                        }
                     }
                 }
             }
@@ -582,6 +602,110 @@ impl TuiRunner {
         }
     }
 
+    /// Handle confirmation overlay key events
+    fn handle_confirmation_overlay_key(&mut self, key: char) {
+        if let Some(Overlay::Confirmation {
+            default_yes,
+            action,
+            ..
+        }) = &self.app.show_overlay.clone()
+        {
+            let result = match key {
+                'y' | 'Y' => Some(true),
+                'n' | 'N' => Some(false),
+                '\n' | '\r' => Some(*default_yes), // Enter uses default
+                _ => None,
+            };
+
+            if let Some(confirmed) = result {
+                // Close the overlay
+                self.app.show_overlay = None;
+
+                if confirmed {
+                    self.app.status_message = "Action confirmed - executing...".to_string();
+
+                    // Execute the action based on type
+                    match action {
+                        PendingAction::Command(cmd) => {
+                            // For commands, we'll let the normal flow handle it
+                            self.app.input_buffer = cmd.clone();
+                            // The command will be executed by the normal Enter key handling
+                        }
+                        PendingAction::FileRead(cmd) => {
+                            // Show thinking overlay first
+                            self.app.show_overlay = Some(Overlay::Thinking {
+                                message: "Reading files...".to_string(),
+                                step: 0,
+                            });
+                            // Store the command to be executed
+                            self.app.input_buffer = cmd.clone();
+                        }
+                        PendingAction::FileEdit(cmd) => {
+                            self.app.show_overlay = Some(Overlay::Thinking {
+                                message: "Editing files...".to_string(),
+                                step: 0,
+                            });
+                            self.app.input_buffer = cmd.clone();
+                        }
+                        PendingAction::FileSearch(cmd) => {
+                            self.app.show_overlay = Some(Overlay::Thinking {
+                                message: "Searching files...".to_string(),
+                                step: 0,
+                            });
+                            self.app.input_buffer = cmd.clone();
+                        }
+                        PendingAction::MultiStep(cmd) => {
+                            self.app.show_overlay = Some(Overlay::Thinking {
+                                message: "Planning execution...".to_string(),
+                                step: 0,
+                            });
+                            self.app.input_buffer = cmd.clone();
+                        }
+                        PendingAction::Unknown(cmd) => {
+                            self.app.input_buffer = cmd.clone();
+                        }
+                    }
+                } else {
+                    self.app.status_message = "Action cancelled".to_string();
+                }
+            }
+        }
+    }
+
+    /// Handle response overlay key events
+    fn handle_response_overlay_key(&mut self, key: char) {
+        if let Some(Overlay::Response {
+            scroll_offset,
+            content,
+            ..
+        }) = &mut self.app.show_overlay
+        {
+            let lines: Vec<&str> = content.lines().collect();
+            let max_visible_lines = 20; // Approximate visible lines in overlay
+
+            match key {
+                'j' | 'J' => {
+                    if *scroll_offset < lines.len().saturating_sub(max_visible_lines) {
+                        *scroll_offset += 1;
+                    }
+                }
+                'k' | 'K' => {
+                    if *scroll_offset > 0 {
+                        *scroll_offset = scroll_offset.saturating_sub(1);
+                    }
+                }
+                'g' => *scroll_offset = 0,
+                'G' => *scroll_offset = lines.len().saturating_sub(max_visible_lines),
+                'q' | 'Q' | '\x1b' => {
+                    // ESC or q to quit
+                    self.app.show_overlay = None;
+                    self.app.status_message = "Ready".to_string();
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// Handle insert mode key events
     async fn handle_insert_mode(&mut self, key: event::KeyEvent) -> Result<bool> {
         match key.code {
@@ -684,7 +808,8 @@ impl TuiRunner {
         let intent = match self.classify_intent(command).await {
             Ok(intent) => intent,
             Err(e) => {
-                return Ok(format!("Failed to classify intent: {}", e));
+                self.app.status_message = format!("Failed to classify intent: {}", e);
+                return Ok(());
             }
         };
 
@@ -692,81 +817,82 @@ impl TuiRunner {
             format!("Intent: {:?} - {}", intent.intent_type, intent.description);
 
         // Handle based on intent type
+        // Show thinking overlay
+        self.app.show_overlay = Some(Overlay::Thinking {
+            message: format!("AI processing: {}", intent.description),
+            step: 0,
+        });
+        self.app.status_message = "AI is thinking...".to_string();
+
         let result = match intent.intent_type {
-            IntentType::Question => self.handle_question(command).await,
-            IntentType::Command => {
-                // Ask for confirmation before executing
-                if confirmation::ask_confirmation(
-                    &format!("Execute command for: {}", intent.description),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.execute_shell_command(command).await
-                } else {
-                    Ok("Command cancelled by user".to_string())
+            IntentType::Question => {
+                let response = self.handle_question(command).await;
+                match response {
+                    Ok(content) => {
+                        // Show response in overlay
+                        self.app.show_overlay = Some(Overlay::Response {
+                            title: "AI Response".to_string(),
+                            content,
+                            scroll_offset: 0,
+                        });
+                        Ok::<String, anyhow::Error>("Response displayed in overlay".to_string())
+                    }
+                    Err(e) => Ok(format!("Error: {}", e)),
                 }
+            }
+            IntentType::Command => {
+                // Show confirmation overlay
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Execute command: {}", intent.description),
+                    default_yes: true,
+                    action: PendingAction::Command(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
             IntentType::FileRead => {
-                if confirmation::ask_confirmation(
-                    &format!("Read files for: {}", intent.description),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.handle_file_read(command).await
-                } else {
-                    Ok("File read cancelled by user".to_string())
-                }
+                // Show confirmation overlay
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Read files: {}", intent.description),
+                    default_yes: true,
+                    action: PendingAction::FileRead(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
             IntentType::FileEdit => {
-                if confirmation::ask_confirmation(
-                    &format!("Edit files for: {}", intent.description),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.handle_file_edit(command).await
-                } else {
-                    Ok("File edit cancelled by user".to_string())
-                }
+                // Show confirmation overlay
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Edit files: {}", intent.description),
+                    default_yes: false, // File edits need more caution
+                    action: PendingAction::FileEdit(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
             IntentType::FileSearch => {
-                if confirmation::ask_confirmation(
-                    &format!("Search files for: {}", intent.description),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.handle_file_search(command).await
-                } else {
-                    Ok("File search cancelled by user".to_string())
-                }
+                // Show confirmation overlay
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Search files: {}", intent.description),
+                    default_yes: true,
+                    action: PendingAction::FileSearch(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
             IntentType::MultiStep => {
-                if confirmation::ask_confirmation(
-                    &format!("Execute multi-step plan for: {}", intent.description),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.execute_run_mode(command).await
-                } else {
-                    Ok("Multi-step execution cancelled by user".to_string())
-                }
+                // Show confirmation overlay
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Execute complex plan: {}", intent.description),
+                    default_yes: false, // Complex operations need confirmation
+                    action: PendingAction::MultiStep(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
             IntentType::Unknown => {
-                // Fallback to shell command
-                if confirmation::ask_confirmation(
-                    &format!("Execute as shell command: {}", command),
-                    true,
-                )
-                .unwrap_or(false)
-                {
-                    self.execute_shell_command(command).await
-                } else {
-                    Ok("Command cancelled by user".to_string())
-                }
+                // Show confirmation overlay for unknown commands
+                self.app.show_overlay = Some(Overlay::Confirmation {
+                    message: format!("Execute unknown command: {}", command),
+                    default_yes: false, // Unknown commands need caution
+                    action: PendingAction::Unknown(command.to_string()),
+                });
+                Ok("Waiting for confirmation...".to_string())
             }
         };
 
@@ -948,13 +1074,13 @@ impl TuiRunner {
         }];
 
         let req = ChatRequest {
-            model: &self.app.config.model,
+            model: &self.app.config.ollama_model,
             messages: &msgs,
             stream: false,
         };
 
         let resp = client
-            .post(&self.app.config.endpoint)
+            .post(&self.app.config.ollama_base_url)
             .json(&req)
             .send()
             .await?;
@@ -1001,13 +1127,13 @@ impl TuiRunner {
         }];
 
         let req = ChatRequest {
-            model: &self.app.config.model,
+            model: &self.app.config.ollama_model,
             messages: &msgs,
             stream: false,
         };
 
         let resp = client
-            .post(&self.app.config.endpoint)
+            .post(&self.app.config.ollama_base_url)
             .json(&req)
             .send()
             .await?;
@@ -1062,13 +1188,13 @@ impl TuiRunner {
         }];
 
         let req = ChatRequest {
-            model: &self.app.config.model,
+            model: &self.app.config.ollama_model,
             messages: &msgs,
             stream: false,
         };
 
         let resp = client
-            .post(&self.app.config.endpoint)
+            .post(&self.app.config.ollama_base_url)
             .json(&req)
             .send()
             .await?;
@@ -1143,13 +1269,13 @@ impl TuiRunner {
         }];
 
         let req = ChatRequest {
-            model: &self.app.config.model,
+            model: &self.app.config.ollama_model,
             messages: &msgs,
             stream: false,
         };
 
         let resp = client
-            .post(&self.app.config.endpoint)
+            .post(&self.app.config.ollama_base_url)
             .json(&req)
             .send()
             .await?;
@@ -1215,13 +1341,13 @@ Output ONLY valid JSON, no other text."#;
         ];
 
         let req = ChatRequest {
-            model: &self.app.config.model,
+            model: &self.app.config.ollama_model,
             messages: &msgs,
             stream: false,
         };
 
         let resp = client
-            .post(&self.app.config.endpoint)
+            .post(&self.app.config.ollama_base_url)
             .json(&req)
             .send()
             .await?;
@@ -1591,6 +1717,19 @@ Output ONLY valid JSON, no other text."#;
             Overlay::Tools => Self::draw_tools_overlay(f, area, app),
             Overlay::Context => Self::draw_context_overlay(f, area, app),
             Overlay::Palette => Self::draw_palette_overlay(f, area, app),
+            Overlay::Confirmation {
+                message,
+                default_yes,
+                ..
+            } => Self::draw_confirmation_overlay(f, area, &message, default_yes),
+            Overlay::Response {
+                title,
+                content,
+                scroll_offset,
+            } => Self::draw_response_overlay(f, area, &title, &content, scroll_offset),
+            Overlay::Thinking { message, step } => {
+                Self::draw_thinking_overlay(f, area, &message, step)
+            }
         }
     }
 
@@ -1647,7 +1786,7 @@ Output ONLY valid JSON, no other text."#;
             .session_list
             .iter()
             .enumerate()
-            .map(|(i, session)| {
+            .map(|(_i, session)| {
                 let mut style = Style::default();
                 let mut prefix = "  ";
 
@@ -1690,7 +1829,7 @@ Output ONLY valid JSON, no other text."#;
     }
 
     /// Draw tools overlay
-    fn draw_tools_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
+    fn draw_tools_overlay(f: &mut Frame, area: Rect, _app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1756,7 +1895,7 @@ Output ONLY valid JSON, no other text."#;
     }
 
     /// Draw context overlay
-    fn draw_context_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
+    fn draw_context_overlay(f: &mut Frame, area: Rect, _app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1814,7 +1953,7 @@ Output ONLY valid JSON, no other text."#;
     }
 
     /// Draw command palette overlay
-    fn draw_palette_overlay(f: &mut Frame, area: Rect, app: &TuiApp) {
+    fn draw_palette_overlay(f: &mut Frame, area: Rect, _app: &TuiApp) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -1872,6 +2011,127 @@ Output ONLY valid JSON, no other text."#;
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::Gray));
         f.render_widget(footer, chunks[2]);
+    }
+
+    /// Draw response overlay with scrollable content
+    fn draw_response_overlay(
+        f: &mut Frame,
+        area: Rect,
+        title: &str,
+        content: &str,
+        scroll_offset: usize,
+    ) {
+        let block = Block::default()
+            .title(title)
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Blue));
+
+        let lines: Vec<Line> = content
+            .lines()
+            .skip(scroll_offset)
+            .take(area.height.saturating_sub(4) as usize) // Account for borders and title
+            .map(|line| Line::from(line))
+            .collect();
+
+        let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
+
+        f.render_widget(paragraph, area);
+
+        // Show scroll indicators
+        if scroll_offset > 0 {
+            let up_indicator = Paragraph::new("↑")
+                .style(Style::default().fg(Color::Gray))
+                .alignment(Alignment::Center);
+            f.render_widget(
+                up_indicator,
+                Rect::new(area.x + area.width - 1, area.y + 1, 1, 1),
+            );
+        }
+
+        let total_lines = content.lines().count();
+        let visible_lines = area.height.saturating_sub(4) as usize;
+        if scroll_offset + visible_lines < total_lines {
+            let down_indicator = Paragraph::new("↓")
+                .style(Style::default().fg(Color::Gray))
+                .alignment(Alignment::Center);
+            f.render_widget(
+                down_indicator,
+                Rect::new(area.x + area.width - 1, area.y + area.height - 2, 1, 1),
+            );
+        }
+    }
+
+    /// Draw thinking/progress overlay
+    fn draw_thinking_overlay(f: &mut Frame, area: Rect, message: &str, step: usize) {
+        let block = Block::default()
+            .title("AI Processing")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Magenta));
+
+        let spinner_chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+        let spinner = spinner_chars[step % spinner_chars.len()];
+
+        let text = vec![
+            Line::from(vec![
+                Span::styled(spinner, Style::default().fg(Color::Cyan)),
+                Span::styled(" ", Style::default()),
+                Span::styled(message, Style::default().fg(Color::White)),
+            ]),
+            Line::from(""),
+            Line::from(vec![Span::styled(
+                "Please wait...",
+                Style::default().fg(Color::Gray),
+            )]),
+        ];
+
+        let paragraph = Paragraph::new(text)
+            .block(block)
+            .alignment(Alignment::Center);
+
+        f.render_widget(paragraph, area);
+    }
+    /// Draw confirmation overlay
+    fn draw_confirmation_overlay(f: &mut Frame, area: Rect, message: &str, default_yes: bool) {
+        let block = Block::default()
+            .title("Confirm Action")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Yellow));
+
+        let default_text = format!(" for {}", if default_yes { "Yes" } else { "No" });
+
+        let text = vec![
+            Line::from(message),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Press ", Style::default().fg(Color::Gray)),
+                Span::styled(
+                    "Y",
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(" for Yes, ", Style::default().fg(Color::Gray)),
+                Span::styled(
+                    "N",
+                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(" for No, or ", Style::default().fg(Color::Gray)),
+                Span::styled(
+                    "Enter",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(&default_text, Style::default().fg(Color::Gray)),
+            ]),
+        ];
+
+        let paragraph = Paragraph::new(text)
+            .block(block)
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: true });
+
+        f.render_widget(paragraph, area);
     }
 }
 

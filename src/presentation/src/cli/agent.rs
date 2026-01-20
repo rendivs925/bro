@@ -88,7 +88,7 @@ OUTPUT ONLY VALID JSON:"#,
 }
 
 /// Enhance agent plan with additional analysis and safety checks
-pub fn enhance_agent_plan(mut plan: AgentPlan, original_task: &str) -> AgentPlan {
+pub fn enhance_agent_plan(mut plan: AgentPlan, _original_task: &str) -> AgentPlan {
     // Re-assess risk levels and add rollback commands
     for step in &mut plan.steps {
         let assessed_risk = assess_agent_command_risk(&step.command);

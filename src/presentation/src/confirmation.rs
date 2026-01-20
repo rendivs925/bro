@@ -5,7 +5,7 @@ use colored::Colorize;
 /// Present confirmation dialog for data collection commands
 pub fn prompt_data_collection_confirmation(
     command: &str,
-    query: &str,
+    _query: &str,
     risk: CommandRisk,
 ) -> anyhow::Result<bool> {
     // println!("DATA COLLECTION REQUIRED");
@@ -31,7 +31,7 @@ pub fn prompt_data_collection_confirmation(
     // println!("Purpose: {}", purpose);
 
     // Show safety level
-    let safety_desc = match risk {
+    let _safety_desc = match risk {
         CommandRisk::InfoOnly => "Read-only, no system modifications",
         CommandRisk::SafeSetup => "Safe system query with minimal impact",
         CommandRisk::SystemChanges => "May modify system configuration",
@@ -50,7 +50,7 @@ pub fn prompt_data_collection_confirmation(
 /// Present confirmation dialog for installation commands
 pub fn prompt_installation_confirmation(
     command: &str,
-    intent: CommandIntent,
+    _intent: CommandIntent,
     packages: Vec<String>,
     services: Vec<String>,
     disk_space: Option<String>,
