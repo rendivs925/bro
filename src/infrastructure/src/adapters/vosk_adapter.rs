@@ -9,11 +9,11 @@ use vosk::{Model, Recognizer};
 pub struct VoskAdapter {
     model: Arc<Model>,
     default_sample_rate: f32,
-    grammar: Vec<String>,
+    grammar: Option<Vec<String>>,
 }
 
 impl VoskAdapter {
-    pub fn new(model_path: &str, sample_rate: f32, grammar: Vec<String>) -> Result<Self> {
+    pub fn new(model_path: &str, sample_rate: f32) -> Result<Self> {
         let model = Model::new(model_path).ok_or_else(|| {
             anyhow::anyhow!(format!(
                 "Failed to load Vosk model from path: {}",
@@ -24,7 +24,22 @@ impl VoskAdapter {
         Ok(Self {
             model: Arc::new(model),
             default_sample_rate: sample_rate,
-            grammar,
+            grammar: None,
+        })
+    }
+
+    pub fn with_grammar(model_path: &str, sample_rate: f32, grammar: Vec<String>) -> Result<Self> {
+        let model = Model::new(model_path).ok_or_else(|| {
+            anyhow::anyhow!(format!(
+                "Failed to load Vosk model from path: {}",
+                model_path
+            ))
+        })?;
+
+        Ok(Self {
+            model: Arc::new(model),
+            default_sample_rate: sample_rate,
+            grammar: Some(grammar),
         })
     }
 }
@@ -46,16 +61,18 @@ impl SpeechRecognitionService for VoskAdapter {
             processed_audio.data.len()
         );
 
-        // Create recognizer with grammar for command recognition
-        let grammar_refs: Vec<&str> = self.grammar.iter().map(|s| s.as_str()).collect();
-        let mut recognizer = Recognizer::new_with_grammar(
-            &self.model,
-            processed_audio.sample_rate as f32,
-            &grammar_refs,
-        )
-        .ok_or_else(|| {
-            anyhow::anyhow!("Failed to create Vosk recognizer with grammar".to_string())
-        })?;
+        // Create recognizer - use grammar if available, otherwise continuous recognition
+        let mut recognizer = if let Some(ref grammar) = self.grammar {
+            let grammar_refs: Vec<&str> = grammar.iter().map(|s| s.as_str()).collect();
+            Recognizer::new_with_grammar(
+                &self.model,
+                processed_audio.sample_rate as f32,
+                &grammar_refs,
+            )
+        } else {
+            Recognizer::new(&self.model, processed_audio.sample_rate as f32)
+        }
+        .ok_or_else(|| anyhow::anyhow!("Failed to create Vosk recognizer".to_string()))?;
 
         // Process the audio - Vosk expects &[i16]
         let _state = recognizer

@@ -36,28 +36,6 @@ impl VoiceHandler {
 
         println!("  ✓ Microphone initialized");
 
-        // Initialize speech recognizer with grammar for commands
-        let grammar = vec![
-            "bro".to_string(),
-            "hey bro".to_string(),
-            "stop".to_string(),
-            "exit".to_string(),
-            "quit".to_string(),
-            "help".to_string(),
-            "run".to_string(),
-            "execute".to_string(),
-            "show".to_string(),
-            "list".to_string(),
-            "create".to_string(),
-            "delete".to_string(),
-            "open".to_string(),
-            "close".to_string(),
-            "yes".to_string(),
-            "no".to_string(),
-            "cancel".to_string(),
-            "confirm".to_string(),
-        ];
-
         // Try to find Vosk model
         let home_model_path = format!(
             "{}/.local/share/vosk/model",
@@ -76,7 +54,7 @@ impl VoiceHandler {
         let mut speech_recognizer = None;
         for path in &model_paths {
             if std::path::Path::new(path).exists() {
-                match VoskAdapter::new(path, 16000.0, grammar.clone()) {
+                match VoskAdapter::new(path, 16000.0) {
                     Ok(adapter) => {
                         println!("  ✓ Speech recognition loaded from {}", path);
                         speech_recognizer = Some(Arc::new(adapter));
