@@ -1217,7 +1217,7 @@ impl PluginManager {
     /// Initialize all loaded plugins
     pub async fn initialize_plugins(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         for (name, plugin) in &self.plugins {
-            let plugin_config = self.config.settings.get(name).cloned().unwrap_or_default();
+            let plugin_config = self.config.power_user.plugins.settings.get(name).cloned().unwrap_or_default();
             // Note: We need to modify the plugin trait to allow mutable access for initialization
             // For now, this is a simplified version
             println!("Initialized plugin: {}", name);

@@ -1341,7 +1341,7 @@ impl CliApp {
         if let Some(config_path) = &cli.generate_config {
             let power_config = infrastructure::config::PowerUserConfig::default();
             let path = PathBuf::from(config_path);
-            match power_config.save_to_file(&path) {
+            match power_config.power_user.save_to_file(&path) {
                 Ok(_) => {
                     println!("Default configuration saved to: {}", path.display());
                     println!("Edit this file to customize your power user settings.");

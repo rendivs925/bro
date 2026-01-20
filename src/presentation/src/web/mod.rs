@@ -35,8 +35,8 @@ impl AxumServer {
     pub async fn run(self, port: u16) -> Result<()> {
         let config = self.state.config.read().await;
 
-        let addr = if config.settings.tailscale_enabled {
-            if let Some(ref bind_addr) = config.settings.web_server_bind {
+        let addr = if config.power_user.plugins.settings.tailscale_enabled {
+            if let Some(ref bind_addr) = config.power_user.plugins.settings.web_server_bind {
                 parse_bind_address(bind_addr)?
             } else {
                 SocketAddr::from(([127, 0, 0, 1], port))

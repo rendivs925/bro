@@ -19,6 +19,6 @@ pub async fn ready_check(State(state): State<AppState>) -> Json<Value> {
         "status": "ready",
         "voice_model_loaded": true,
         "config_loaded": true,
-        "tailscale_enabled": config.settings.tailscale_enabled
+        "tailscale_enabled": config.power_user.plugins.settings.tailscale_enabled
     }))
 }

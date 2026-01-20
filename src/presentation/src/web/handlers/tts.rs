@@ -34,7 +34,7 @@ pub async fn speak(
     }
 
     match state
-        .voice_service
+        .voice_processor
         .text_to_speech
         .synthesize(&request.text, request.voice.as_deref())
         .await
@@ -72,7 +72,7 @@ pub async fn test_voice(
     Json(request): Json<TestVoiceRequest>,
 ) -> Json<Value> {
     let available_commands = state
-        .voice_service
+        .voice_processor
         .command_interpreter
         .get_available_commands()
         .await
@@ -92,7 +92,7 @@ pub async fn test_voice(
 
     // Test TTS by synthesizing longer text to ensure it works with complex sentences
     let (tts_available, audio_data) = match state
-        .voice_service
+        .voice_processor
         .text_to_speech
         .synthesize(&request.text, None)
         .await

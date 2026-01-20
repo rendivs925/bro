@@ -100,13 +100,13 @@ pub async fn get_config(State(state): State<AppState>) -> Json<ConfigResponse> {
         .collect();
 
     let settings = SettingsInfo {
-        vosk_model_path: config.settings.vosk_model_path.clone(),
-        sample_rate: config.settings.sample_rate,
-        audio_device: config.settings.audio_device.clone(),
-        web_server_port: config.settings.web_server_port,
-        enable_tts: config.settings.enable_tts,
-        enable_webrtc: config.settings.enable_webrtc,
-        tailscale_enabled: config.settings.tailscale_enabled,
+        vosk_model_path: config.power_user.plugins.settings.vosk_model_path.clone(),
+        sample_rate: config.power_user.plugins.settings.sample_rate,
+        audio_device: config.power_user.plugins.settings.audio_device.clone(),
+        web_server_port: config.power_user.plugins.settings.web_server_port,
+        enable_tts: config.power_user.plugins.settings.enable_tts,
+        enable_webrtc: config.power_user.plugins.settings.enable_webrtc,
+        tailscale_enabled: config.power_user.plugins.settings.tailscale_enabled,
     };
 
     Json(ConfigResponse {
@@ -137,13 +137,13 @@ pub async fn update_config(
 
     if let Some(settings) = request.settings {
         if let Some(path) = settings.vosk_model_path {
-            config.settings.vosk_model_path = path;
+            config.power_user.plugins.settings.vosk_model_path = path;
         }
         if let Some(rate) = settings.sample_rate {
-            config.settings.sample_rate = rate;
+            config.power_user.plugins.settings.sample_rate = rate;
         }
         if let Some(tts) = settings.enable_tts {
-            config.settings.enable_tts = tts;
+            config.power_user.plugins.settings.enable_tts = tts;
         }
     }
 
@@ -166,10 +166,10 @@ pub async fn get_tailscale_status(State(state): State<AppState>) -> Json<Tailsca
     let config = state.config.read().await;
 
     Json(TailscaleStatus {
-        enabled: config.settings.tailscale_enabled,
-        connected: config.settings.tailscale_enabled,
-        hostname: config.settings.tailscale_hostname.clone(),
-        port: config.settings.web_server_port,
+        enabled: config.power_user.plugins.settings.tailscale_enabled,
+        connected: config.power_user.plugins.settings.tailscale_enabled,
+        hostname: config.power_user.plugins.settings.tailscale_hostname.clone(),
+        port: config.power_user.plugins.settings.web_server_port,
         error: None,
     })
 }
@@ -187,12 +187,12 @@ pub async fn update_tailscale_config(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    config.settings.tailscale_enabled = request.enabled;
+    config.power_user.plugins.settings.tailscale_enabled = request.enabled;
     if let Some(hostname) = request.hostname {
-        config.settings.tailscale_hostname = Some(hostname);
+        config.power_user.plugins.settings.tailscale_hostname = Some(hostname);
     }
     if let Some(port) = request.port {
-        config.settings.web_server_port = port;
+        config.power_user.plugins.settings.web_server_port = port;
     }
 
     Ok(Json(json!({
@@ -225,24 +225,24 @@ pub async fn create_command(
     let mut config = state.config.write().await;
 
     // Parse the action from JSON
-    let action: domain::entities::CommandAction =
+    let action: domain::entities::voice_command::CommandAction =
         serde_json::from_value(request.action.clone()).map_err(|_| StatusCode::BAD_REQUEST)?;
 
-    let command = domain::entities::VoiceCommand {
+    let command = domain::entities::voice_command::VoiceCommand {
         id: uuid::Uuid::new_v4().to_string(),
         text: request.text,
         action,
         category: request.category,
         enabled: true,
         confidence: 0.0,
-        metadata: domain::entities::CommandMetadata::default(),
+        metadata: domain::entities::voice_command::CommandMetadata::default(),
     };
 
     let id = command.id.clone();
-    config.commands.push(command);
+    config.power_user.commands.push(command);
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -278,7 +278,7 @@ pub async fn update_command(
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -292,15 +292,15 @@ pub async fn delete_command(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    let initial_len = config.commands.len();
-    config.commands.retain(|c| c.id != id);
+    let initial_len = config.power_user.commands.len();
+    config.power_user.commands.retain(|c| c.id != id);
 
-    if config.commands.len() == initial_len {
+    if config.power_user.commands.len() == initial_len {
         return Err(StatusCode::NOT_FOUND);
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -313,7 +313,7 @@ pub async fn list_commands(State(state): State<AppState>) -> Result<Json<Value>,
 
     Ok(Json(json!({
         "status": "ok",
-        "commands": config.commands
+        "commands": config.power_user.commands
     })))
 }
 
@@ -357,22 +357,22 @@ pub async fn create_workflow(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    let workflow = domain::entities::Workflow {
+    let workflow = domain::entities::workflow::Workflow {
         id: uuid::Uuid::new_v4().to_string(),
         name: request.name,
         description: request.description,
-        trigger: domain::entities::WorkflowTrigger::Manual,
+        trigger: domain::entities::workflow::WorkflowTrigger::Manual,
         steps: Vec::new(),
         variables: std::collections::HashMap::new(),
-        error_handling: domain::entities::ErrorStrategy::Stop,
+        error_handling: domain::entities::workflow::ErrorStrategy::Stop,
         enabled: true,
     };
 
     let id = workflow.id.clone();
-    config.workflows.push(workflow);
+    config.power_user.workflows.push(workflow);
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -405,7 +405,7 @@ pub async fn update_workflow(
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -419,15 +419,15 @@ pub async fn delete_workflow(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    let initial_len = config.workflows.len();
-    config.workflows.retain(|w| w.id != id);
+    let initial_len = config.power_user.workflows.len();
+    config.power_user.workflows.retain(|w| w.id != id);
 
-    if config.workflows.len() == initial_len {
+    if config.power_user.workflows.len() == initial_len {
         return Err(StatusCode::NOT_FOUND);
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -440,7 +440,7 @@ pub async fn list_workflows(State(state): State<AppState>) -> Result<Json<Value>
 
     Ok(Json(json!({
         "status": "ok",
-        "workflows": config.workflows
+        "workflows": config.power_user.workflows
     })))
 }
 
@@ -504,10 +504,10 @@ pub async fn create_script(
     };
 
     let id = script.id.clone();
-    config.scripts.push(script);
+    config.power_user.scripts.push(script);
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -540,7 +540,7 @@ pub async fn update_script(
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -554,15 +554,15 @@ pub async fn delete_script(
 ) -> Result<Json<Value>, StatusCode> {
     let mut config = state.config.write().await;
 
-    let initial_len = config.scripts.len();
-    config.scripts.retain(|s| s.id != id);
+    let initial_len = config.power_user.scripts.len();
+    config.power_user.scripts.retain(|s| s.id != id);
 
-    if config.scripts.len() == initial_len {
+    if config.power_user.scripts.len() == initial_len {
         return Err(StatusCode::NOT_FOUND);
     }
 
     // Save to file
-    let _ = config.save_to_file("config/system.json");
+    let _ = config.power_user.save_to_file("config/system.json");
 
     Ok(Json(json!({
         "status": "ok",
@@ -575,7 +575,7 @@ pub async fn list_scripts(State(state): State<AppState>) -> Result<Json<Value>, 
 
     Ok(Json(json!({
         "status": "ok",
-        "scripts": config.scripts
+        "scripts": config.power_user.scripts
     })))
 }
 
