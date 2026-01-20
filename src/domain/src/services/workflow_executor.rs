@@ -1,9 +1,8 @@
 use crate::entities::workflow::{
-    ComparisonOperator, Condition, ErrorStrategy, Variable, VariableValue, Workflow, WorkflowStep,
+    ComparisonOperator, Condition, ErrorStrategy, VariableValue, Workflow, WorkflowStep,
 };
 use crate::services::{
-    browser_automation::BrowserAutomationService,
-    script_executor::{ScriptExecution, ScriptExecutor},
+    browser_automation::BrowserAutomationService, script_executor::ScriptExecutor,
 };
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};

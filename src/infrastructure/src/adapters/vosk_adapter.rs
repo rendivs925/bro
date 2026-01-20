@@ -1,7 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use domain::entities::recognition_session::{AudioSample, RecognitionResult};
+use domain::entities::recognition_session::RecognitionResult;
 use domain::services::SpeechRecognitionService;
+use shared::types::AudioSample;
 use std::sync::Arc;
 use vosk::{Model, Recognizer};
 
@@ -68,5 +69,17 @@ impl SpeechRecognitionService for VoskAdapter {
             }
             _ => Ok(RecognitionResult::new("".to_string(), 0.0)),
         }
+    }
+
+    async fn initialize(&self) -> Result<()> {
+        // Vosk model is already loaded during construction
+        tracing::info!("Vosk speech recognition adapter initialized");
+        Ok(())
+    }
+
+    async fn shutdown(&self) -> Result<()> {
+        // Vosk doesn't require explicit shutdown
+        tracing::info!("Vosk speech recognition adapter shutdown");
+        Ok(())
     }
 }

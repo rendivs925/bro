@@ -1,4 +1,3 @@
-use domain::entities::recognition_session::AudioSample;
 use domain::services::{SpeechRecognitionService, TextToSpeechService};
 use infrastructure::{
     browser_automation::{BrowserAction, BrowserAutomationService, BrowserSession, BrowserType},
@@ -7,6 +6,7 @@ use infrastructure::{
     script_executor::{ScriptExecution, ScriptExecutor},
     workflow_executor::{Workflow, WorkflowExecutor},
 };
+use shared::types::AudioSample;
 use shared::types::{Result, ScriptType};
 use std::collections::HashMap;
 use std::sync::Arc;

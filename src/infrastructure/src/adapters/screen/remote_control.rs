@@ -2,7 +2,6 @@
 
 use anyhow::Result;
 use std::process::Command;
-use tokio::time::{sleep, Duration};
 use tracing;
 
 /// Remote control manager

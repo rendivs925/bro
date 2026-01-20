@@ -1,9 +1,9 @@
-use domain::entities::recognition_session::AudioSample;
 use domain::services::{SpeechRecognitionService, TextToSpeechService};
 use infrastructure::{
     adapters::screen::{RemoteControlManager, ScreenSharingManager},
     command_interpreter::{CommandInterpreter, InterpretedCommand},
 };
+use shared::types::AudioSample;
 use shared::types::Result;
 use std::sync::Arc;
 

@@ -257,4 +257,16 @@ impl TextToSpeechService for TtsAdapter {
 
         Ok(voices)
     }
+
+    async fn initialize(&self) -> Result<()> {
+        // Piper TTS initialization is handled in new() method
+        tracing::info!("TTS adapter already initialized");
+        Ok(())
+    }
+
+    async fn shutdown(&self) -> Result<()> {
+        // Piper TTS doesn't require explicit shutdown
+        tracing::info!("TTS adapter shutdown");
+        Ok(())
+    }
 }

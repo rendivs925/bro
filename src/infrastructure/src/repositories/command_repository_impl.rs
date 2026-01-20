@@ -26,15 +26,13 @@ impl InMemoryCommandRepository {
         // Add some built-in commands
         let hello_cmd = VoiceCommand::new(
             "hello".to_string(),
-            domain::entities::CommandAction::ShellCommand(
-                "echo 'Hello! How can I help you?'".to_string(),
-            ),
+            CommandAction::ShellCommand("echo 'Hello! How can I help you?'".to_string()),
         );
         commands.insert(hello_cmd.id.clone(), hello_cmd);
 
         let status_cmd = VoiceCommand::new(
             "status".to_string(),
-            domain::entities::CommandAction::ShellCommand("echo 'System is running'".to_string()),
+            CommandAction::ShellCommand("echo 'System is running'".to_string()),
         );
         commands.insert(status_cmd.id.clone(), status_cmd);
 
@@ -157,31 +155,29 @@ impl JsonFileCommandRepository {
         // Add default commands
         let hello_cmd = VoiceCommand::new(
             "hello".to_string(),
-            domain::entities::CommandAction::ShellCommand(
-                "echo 'Hello! How can I help you?'".to_string(),
-            ),
+            CommandAction::ShellCommand("echo 'Hello! How can I help you?'".to_string()),
         );
 
         let status_cmd = VoiceCommand::new(
             "status".to_string(),
-            domain::entities::CommandAction::ShellCommand("echo 'System is running'".to_string()),
+            CommandAction::ShellCommand("echo 'System is running'".to_string()),
         );
 
         let help_cmd = VoiceCommand::new(
             "help".to_string(),
-            domain::entities::CommandAction::ShellCommand(
+            CommandAction::ShellCommand(
                 "echo 'Available commands: hello, status, help, time, date'".to_string(),
             ),
         );
 
         let time_cmd = VoiceCommand::new(
             "time".to_string(),
-            domain::entities::CommandAction::ShellCommand("date +%H:%M:%S".to_string()),
+            CommandAction::ShellCommand("date +%H:%M:%S".to_string()),
         );
 
         let date_cmd = VoiceCommand::new(
             "date".to_string(),
-            domain::entities::CommandAction::ShellCommand("date +%Y-%m-%d".to_string()),
+            CommandAction::ShellCommand("date +%Y-%m-%d".to_string()),
         );
 
         {
