@@ -27,6 +27,7 @@ pub mod policy_engine;
 pub mod privacy_controls;
 pub mod qdrant_advanced;
 pub mod qdrant_storage;
+pub mod repositories;
 pub mod resource_enforcement;
 pub mod safety;
 pub mod sandbox;

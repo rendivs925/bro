@@ -7,11 +7,11 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use base64;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::presentation::axum_server::state::AppState;
+use crate::web::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct SpeakRequest {
@@ -114,7 +114,7 @@ pub async fn test_voice(
 
     let audio_url = if let Some(audio_data) = audio_data {
         // Create a data URL for the WAV audio
-        let base64_audio = base64::encode(&audio_data);
+        let base64_audio = BASE64.encode(&audio_data);
         Some(format!("data:audio/wav;base64,{}", base64_audio))
     } else {
         None

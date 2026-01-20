@@ -5,6 +5,7 @@ use infrastructure::config::Config;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Shared application state for all handlers
 #[derive(Clone)]
 pub struct AppState {
     pub voice_processor: Arc<VoiceCommandProcessor>,
@@ -12,12 +13,19 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(
-        voice_processor: Arc<VoiceCommandProcessor>,
-        config: Config,
-    ) -> Self {
+    pub fn new(voice_processor: Arc<VoiceCommandProcessor>, config: Config) -> Self {
         Self {
             voice_processor,
+            config: Arc::new(RwLock::new(config)),
+        }
+    }
+
+    /// Create a minimal state without voice processor (for testing or fallback)
+    pub fn minimal(config: Config) -> Self {
+        // Create a minimal voice processor - this is a placeholder
+        // In production, this should be properly initialized
+        Self {
+            voice_processor: Arc::new(VoiceCommandProcessor::default()),
             config: Arc::new(RwLock::new(config)),
         }
     }

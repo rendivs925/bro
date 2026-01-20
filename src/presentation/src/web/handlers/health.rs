@@ -3,7 +3,7 @@
 use axum::{extract::State, Json};
 use serde_json::{json, Value};
 
-use crate::presentation::web::state::AppState;
+use crate::web::state::AppState;
 
 pub async fn health_check() -> Json<Value> {
     Json(json!({

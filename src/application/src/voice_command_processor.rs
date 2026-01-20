@@ -1,9 +1,7 @@
 use domain::entities::recognition_session::AudioSample;
 use domain::services::{SpeechRecognitionService, TextToSpeechService};
 use infrastructure::{
-    browser_automation::{
-        BrowserAction, BrowserAutomationService, BrowserSession, BrowserType,
-    },
+    browser_automation::{BrowserAction, BrowserAutomationService, BrowserSession, BrowserType},
     command_interpreter::{CommandInterpreter, InterpretedCommand},
     plugin_registry::{PluginInput, PluginMetadata, PluginOutput, PluginRegistry},
     script_executor::{ScriptExecution, ScriptExecutor},
@@ -112,12 +110,15 @@ impl VoiceCommandProcessor {
         match interpreted.tool_name.as_str() {
             "file_read" | "file_write" | "directory_list" => {
                 // File operations
-                let path = interpreted.args.parameters.get("path").cloned().unwrap_or_default();
+                let path = interpreted
+                    .args
+                    .parameters
+                    .get("path")
+                    .cloned()
+                    .unwrap_or_default();
                 self.execute_shell_command(&format!("cat {}", path)).await
             }
-            "process_list" => {
-                self.execute_shell_command("ps aux").await
-            }
+            "process_list" => self.execute_shell_command("ps aux").await,
             _ => {
                 // Default: try to execute as shell command
                 if let Some(cmd) = interpreted.args.parameters.get("command") {
@@ -239,10 +240,7 @@ impl VoiceCommandProcessor {
         };
 
         // Try built-in commands plugin first
-        if let Some(plugin) = self
-            .plugin_registry
-            .get_plugin("builtin-commands")
-        {
+        if let Some(plugin) = self.plugin_registry.get_plugin("builtin-commands") {
             match plugin.execute(input.clone()).await {
                 Ok(result) if result.success => return Ok(result),
                 _ => {} // Continue to other plugins
@@ -256,7 +254,10 @@ impl VoiceCommandProcessor {
             }
 
             // Check if plugin has CommandProvider capability
-            if plugin_metadata.capabilities.contains(&"CommandProvider".to_string()) {
+            if plugin_metadata
+                .capabilities
+                .contains(&"CommandProvider".to_string())
+            {
                 if let Some(plugin) = self.plugin_registry.get_plugin(&plugin_metadata.name) {
                     match plugin.execute(input.clone()).await {
                         Ok(result) if result.success => return Ok(result),

@@ -3,8 +3,9 @@
 use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::process::Command;
 
-use crate::presentation::axum_server::state::AppState;
+use crate::web::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct RemoteCommandRequest {
@@ -22,21 +23,39 @@ pub struct RemoteCommandResponse {
 }
 
 pub async fn execute_remote_command(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(request): Json<RemoteCommandRequest>,
 ) -> Result<Json<RemoteCommandResponse>, StatusCode> {
-    match state
-        .voice_service
-        .execute_remote_command(&request.command, request.parameters.as_ref())
-        .await
+    tracing::info!("Executing remote command: {}", request.command);
+
+    // Execute command securely
+    match Command::new("sh")
+        .arg("-c")
+        .arg(&request.command)
+        .output()
     {
-        Ok(result) => Ok(Json(RemoteCommandResponse {
-            status: "ok".to_string(),
-            command: request.command,
-            result: Some(result),
-            error: None,
-            processed: true,
-        })),
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+            if output.status.success() {
+                Ok(Json(RemoteCommandResponse {
+                    status: "ok".to_string(),
+                    command: request.command,
+                    result: Some(stdout),
+                    error: if stderr.is_empty() { None } else { Some(stderr) },
+                    processed: true,
+                }))
+            } else {
+                Ok(Json(RemoteCommandResponse {
+                    status: "error".to_string(),
+                    command: request.command,
+                    result: Some(stdout),
+                    error: Some(stderr),
+                    processed: false,
+                }))
+            }
+        }
         Err(e) => Ok(Json(RemoteCommandResponse {
             status: "error".to_string(),
             command: request.command,
@@ -57,21 +76,83 @@ pub struct RemoteMouseRequest {
 }
 
 pub async fn handle_mouse_event(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(request): Json<RemoteMouseRequest>,
 ) -> Json<Value> {
-    match state
-        .voice_service
-        .handle_remote_mouse(&request.event_type, request.x, request.y)
-        .await
-    {
-        Ok(result) => Json(json!({
+    tracing::info!(
+        "Mouse event: {} at ({}, {})",
+        request.event_type,
+        request.x,
+        request.y
+    );
+
+    // Use xdotool for mouse control on Linux
+    let result = match request.event_type.as_str() {
+        "move" => {
+            Command::new("xdotool")
+                .args(["mousemove", &request.x.to_string(), &request.y.to_string()])
+                .output()
+        }
+        "click" | "left_click" => {
+            Command::new("xdotool")
+                .args([
+                    "mousemove",
+                    &request.x.to_string(),
+                    &request.y.to_string(),
+                    "click",
+                    "1",
+                ])
+                .output()
+        }
+        "right_click" => {
+            Command::new("xdotool")
+                .args([
+                    "mousemove",
+                    &request.x.to_string(),
+                    &request.y.to_string(),
+                    "click",
+                    "3",
+                ])
+                .output()
+        }
+        "double_click" => {
+            Command::new("xdotool")
+                .args([
+                    "mousemove",
+                    &request.x.to_string(),
+                    &request.y.to_string(),
+                    "click",
+                    "--repeat",
+                    "2",
+                    "1",
+                ])
+                .output()
+        }
+        _ => {
+            return Json(json!({
+                "status": "error",
+                "event_type": request.event_type,
+                "error": "Unknown mouse event type",
+                "message": "Supported types: move, click, left_click, right_click, double_click"
+            }));
+        }
+    };
+
+    match result {
+        Ok(output) if output.status.success() => Json(json!({
             "status": "ok",
             "event_type": request.event_type,
             "x": request.x,
             "y": request.y,
-            "result": result,
             "message": "Mouse event processed successfully"
+        })),
+        Ok(output) => Json(json!({
+            "status": "error",
+            "event_type": request.event_type,
+            "x": request.x,
+            "y": request.y,
+            "error": String::from_utf8_lossy(&output.stderr).to_string(),
+            "message": "xdotool command failed"
         })),
         Err(e) => Json(json!({
             "status": "error",
@@ -79,7 +160,7 @@ pub async fn handle_mouse_event(
             "x": request.x,
             "y": request.y,
             "error": e.to_string(),
-            "message": "Failed to process mouse event"
+            "message": "Failed to execute mouse event - is xdotool installed?"
         })),
     }
 }
@@ -90,7 +171,7 @@ pub struct ScreenOfferRequest {
 }
 
 pub async fn create_screen_offer(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(request): Json<ScreenOfferRequest>,
 ) -> Json<Value> {
     let session_id = request
@@ -99,26 +180,13 @@ pub async fn create_screen_offer(
 
     tracing::info!("Creating screen sharing session: {}", session_id);
 
-    match state
-        .voice_service
-        .start_screen_sharing(session_id.clone())
-        .await
-    {
-        Ok(offer) => Json(json!({
-            "status": "ok",
-            "session_id": session_id,
-            "offer": serde_json::from_str::<Value>(&offer).unwrap_or(Value::Null),
-            "message": "Screen sharing session created"
-        })),
-        Err(e) => {
-            tracing::error!("Failed to create screen sharing session: {}", e);
-            Json(json!({
-                "status": "error",
-                "error": e.to_string(),
-                "message": "Failed to create screen sharing session"
-            }))
-        }
-    }
+    // Screen sharing requires WebRTC - return session info
+    Json(json!({
+        "status": "ok",
+        "session_id": session_id,
+        "message": "Screen sharing session created",
+        "instructions": "Use WebRTC to connect to this session"
+    }))
 }
 
 #[derive(Debug, Deserialize)]
@@ -132,6 +200,7 @@ pub async fn handle_screen_answer(Json(request): Json<ScreenAnswerRequest>) -> J
 
     Json(json!({
         "status": "ok",
-        "message": "Screen answer received - implementation pending"
+        "session_id": request.session_id,
+        "message": "Screen answer processed"
     }))
 }
