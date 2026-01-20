@@ -4,14 +4,14 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
-struct ChatRequest<'a> {
+pub struct ChatRequest<'a> {
     model: &'a str,
     messages: &'a [Message],
     stream: bool,
 }
 
 #[derive(Deserialize, Debug)]
-struct ChatResponse {
+pub struct ChatResponse {
     message: Message,
 }
 
@@ -50,7 +50,7 @@ fn clean_command_output(raw: &str) -> String {
         let lines: Vec<&str> = trimmed.lines().collect();
         if lines.len() >= 3 {
             if lines[0].trim().starts_with("```") && lines.last().unwrap().trim() == "```" {
-                return lines[1..lines.len()-1].join("\n").trim().to_string();
+                return lines[1..lines.len() - 1].join("\n").trim().to_string();
             }
         }
     }
@@ -168,19 +168,19 @@ fn find_project_root() -> Option<String> {
     loop {
         // Check for various project indicators
         let project_files = [
-            "Cargo.toml",      // Rust
-            "package.json",    // Node.js
+            "Cargo.toml",       // Rust
+            "package.json",     // Node.js
             "requirements.txt", // Python
-            "Pipfile",         // Python
-            "pyproject.toml",  // Python
-            "setup.py",        // Python
-            "Makefile",        // C/C++
-            "CMakeLists.txt",  // C/C++
-            "configure.ac",    // C/C++
-            "go.mod",          // Go
-            "Gemfile",         // Ruby
-            "composer.json",   // PHP
-            ".git",            // Git repo as fallback
+            "Pipfile",          // Python
+            "pyproject.toml",   // Python
+            "setup.py",         // Python
+            "Makefile",         // C/C++
+            "CMakeLists.txt",   // C/C++
+            "configure.ac",     // C/C++
+            "go.mod",           // Go
+            "Gemfile",          // Ruby
+            "composer.json",    // PHP
+            ".git",             // Git repo as fallback
         ];
 
         for file in &project_files {
@@ -460,4 +460,126 @@ Return only the script text, no markdown."#;
         .await?;
 
     Ok(raw.trim().into())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum IntentType {
+    Question,
+    Command,
+    FileRead,
+    FileEdit,
+    FileSearch,
+    MultiStep,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Intent {
+    pub intent_type: IntentType,
+    pub description: String,
+    pub confidence: f32,
+    pub details: Option<String>,
+}
+
+/// Classify user intent from prompt
+pub async fn classify_intent(config: &Config, prompt: &str) -> Result<Intent> {
+    let client = reqwest::Client::new();
+
+    let cwd = std::env::current_dir()
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|_| "/home/user".to_string());
+
+    let system = r#"You are an AI assistant that classifies user prompts into specific intent categories.
+
+Analyze the user's prompt and respond with a JSON object containing:
+- intent_type: One of "Question", "Command", "FileRead", "FileEdit", "FileSearch", "MultiStep", "Unknown"
+- description: Brief description of what the user wants
+- confidence: Number between 0.0 and 1.0 indicating confidence
+- details: Optional additional details (can be null)
+
+Intent categories:
+- Question: User is asking for information, explanation, or advice (answer directly)
+- Command: User wants to execute a single command or operation
+- FileRead: User wants to read/view file contents
+- FileEdit: User wants to modify or create files
+- FileSearch: User wants to search for files or content within files
+- MultiStep: Complex task requiring multiple steps or commands
+- Unknown: Cannot determine intent
+
+Examples:
+"what is the capital of France?" -> Question
+"list files in current directory" -> Command
+"show me the contents of main.rs" -> FileRead
+"add error handling to this function" -> FileEdit
+"find all TODO comments" -> FileSearch
+"set up a new React project" -> MultiStep
+
+Output ONLY valid JSON, no other text."#;
+
+    let msgs = vec![
+        Message {
+            role: "system".into(),
+            content: system.into(),
+        },
+        Message {
+            role: "user".into(),
+            content: format!("Current directory: {}\n\nPrompt: {}", cwd, prompt),
+        },
+    ];
+
+    let req = ChatRequest {
+        model: &config.model,
+        messages: &msgs,
+        stream: false,
+    };
+
+    let raw = client
+        .post(&config.endpoint)
+        .json(&req)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    // Try to parse JSON directly
+    if let Ok(intent) = serde_json::from_str::<Intent>(&raw) {
+        return Ok(intent);
+    }
+
+    // Try to extract JSON from response
+    if let Some(json) = extract_last_json(&raw) {
+        if let Ok(intent) = serde_json::from_str::<Intent>(json) {
+            return Ok(intent);
+        }
+    }
+
+    // Handle streaming response
+    let lines: Vec<&str> = raw.lines().collect();
+    for line in lines.into_iter().rev() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if let Ok(v) = serde_json::from_str::<ChatResponse>(line) {
+            if v.message.role == "assistant" {
+                let content = clean_command_output(&v.message.content);
+                if let Ok(intent) = serde_json::from_str::<Intent>(&content) {
+                    return Ok(intent);
+                }
+                if let Some(json) = extract_last_json(&content) {
+                    if let Ok(intent) = serde_json::from_str::<Intent>(json) {
+                        return Ok(intent);
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback to Unknown intent
+    Ok(Intent {
+        intent_type: IntentType::Unknown,
+        description: "Could not classify intent".to_string(),
+        confidence: 0.0,
+        details: Some(raw),
+    })
 }

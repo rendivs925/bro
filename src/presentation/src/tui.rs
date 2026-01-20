@@ -19,10 +19,45 @@ use ratatui::{
 
 use crate::cli::{Cli, CliApp};
 use clap::Parser;
+use infrastructure::config::Config;
+use serde::{Deserialize, Serialize};
+use shared::confirmation;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum IntentType {
+    Question,
+    Command,
+    FileRead,
+    FileEdit,
+    FileSearch,
+    MultiStep,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Intent {
+    pub intent_type: IntentType,
+    pub description: String,
+    pub confidence: f32,
+    pub details: Option<String>,
+}
+
+#[derive(Serialize)]
+struct ChatRequest<'a> {
+    model: &'a str,
+    messages: &'a [domain::session::Message],
+    stream: bool,
+}
+
+#[derive(Deserialize, Debug)]
+struct ChatResponse {
+    message: domain::session::Message,
+}
 
 /// TUI application state
 pub struct TuiApp {
     cli_app: CliApp,
+    config: Config,
     current_mode: TuiMode,
     input_buffer: String,
     cursor_position: usize,
@@ -60,12 +95,14 @@ impl TuiApp {
     /// Create a new TUI application state
     pub fn new(cli: Cli) -> Result<Self> {
         let mut cli_app = CliApp::new();
+        let config = Config::new(true, true, false); // safe_mode=true, cache_enabled=true, copy=false
 
         // Initialize CLI app with the parsed CLI args
         // Note: We'll handle the TUI-specific logic separately
 
         Ok(Self {
             cli_app,
+            config,
             current_mode: TuiMode::Insert,
             input_buffer: String::new(),
             cursor_position: 0,
@@ -641,66 +678,94 @@ impl TuiRunner {
             self.app.history_index = None;
         }
 
-        self.app.status_message = format!("Executing: {} ...", command);
+        self.app.status_message = format!("AI processing: {} ...", command);
 
-        // Parse the command and determine what to do
-        let parts: Vec<&str> = command.split_whitespace().collect();
-        let result = match parts.get(0).map(|s| *s) {
-            Some("ls") | Some("pwd") | Some("cd") | Some("mkdir") | Some("rm") | Some("cp")
-            | Some("mv") => {
-                // File system commands - execute directly
-                self.execute_shell_command(command).await
+        // Use AI to classify intent
+        let intent = match self.classify_intent(command).await {
+            Ok(intent) => intent,
+            Err(e) => {
+                return Ok(format!("Failed to classify intent: {}", e));
             }
-            Some("git") => {
-                // Git commands - execute directly
-                self.execute_shell_command(command).await
-            }
-            Some("cargo") => {
-                // Cargo commands - execute directly
-                self.execute_shell_command(command).await
-            }
-            Some("plan") => {
-                // Plan mode command - delegate to CliApp
-                self.execute_plan_mode(&parts[1..].join(" ")).await
-            }
-            Some("build") => {
-                // Build mode command - delegate to CliApp
-                self.execute_build_mode(&parts[1..].join(" ")).await
-            }
-            Some("run") | Some("agent") => {
-                // Run mode command - delegate to CliApp
-                self.execute_run_mode(&parts[1..].join(" ")).await
-            }
-            Some("chat") => {
-                // Chat mode command - delegate to CliApp
-                self.execute_chat_mode(&parts[1..].join(" ")).await
-            }
-            Some("rag") => {
-                // RAG mode command - delegate to CliApp
-                self.execute_rag_mode(&parts[1..].join(" ")).await
-            }
-            Some("vision") => {
-                // Vision mode command - not yet implemented in TUI
-                Ok(format!("Vision mode not yet implemented in TUI"))
-            }
-            Some("mode") => {
-                // Switch TUI mode
-                Ok(self.switch_tui_mode(&parts[1..].join(" "))?)
-            }
-            _ => {
-                // Check if we're in a specific mode - if so, execute command in that mode
-                if let Some(mode) = &self.app.tui_mode {
-                    match mode.as_str() {
-                        "plan" => self.execute_plan_mode(command).await,
-                        "build" => self.execute_build_mode(command).await,
-                        "run" => self.execute_run_mode(command).await,
-                        "chat" => self.execute_chat_mode(command).await,
-                        "rag" => self.execute_rag_mode(command).await,
-                        _ => self.execute_shell_command(command).await,
-                    }
-                } else {
-                    // Default: try to execute as shell command
+        };
+
+        self.app.status_message =
+            format!("Intent: {:?} - {}", intent.intent_type, intent.description);
+
+        // Handle based on intent type
+        let result = match intent.intent_type {
+            IntentType::Question => self.handle_question(command).await,
+            IntentType::Command => {
+                // Ask for confirmation before executing
+                if confirmation::ask_confirmation(
+                    &format!("Execute command for: {}", intent.description),
+                    true,
+                )
+                .unwrap_or(false)
+                {
                     self.execute_shell_command(command).await
+                } else {
+                    Ok("Command cancelled by user".to_string())
+                }
+            }
+            IntentType::FileRead => {
+                if confirmation::ask_confirmation(
+                    &format!("Read files for: {}", intent.description),
+                    true,
+                )
+                .unwrap_or(false)
+                {
+                    self.handle_file_read(command).await
+                } else {
+                    Ok("File read cancelled by user".to_string())
+                }
+            }
+            IntentType::FileEdit => {
+                if confirmation::ask_confirmation(
+                    &format!("Edit files for: {}", intent.description),
+                    true,
+                )
+                .unwrap_or(false)
+                {
+                    self.handle_file_edit(command).await
+                } else {
+                    Ok("File edit cancelled by user".to_string())
+                }
+            }
+            IntentType::FileSearch => {
+                if confirmation::ask_confirmation(
+                    &format!("Search files for: {}", intent.description),
+                    true,
+                )
+                .unwrap_or(false)
+                {
+                    self.handle_file_search(command).await
+                } else {
+                    Ok("File search cancelled by user".to_string())
+                }
+            }
+            IntentType::MultiStep => {
+                if confirmation::ask_confirmation(
+                    &format!("Execute multi-step plan for: {}", intent.description),
+                    true,
+                )
+                .unwrap_or(false)
+                {
+                    self.execute_run_mode(command).await
+                } else {
+                    Ok("Multi-step execution cancelled by user".to_string())
+                }
+            }
+            IntentType::Unknown => {
+                // Fallback to shell command
+                if confirmation::ask_confirmation(
+                    &format!("Execute as shell command: {}", command),
+                    true,
+                )
+                .unwrap_or(false)
+                {
+                    self.execute_shell_command(command).await
+                } else {
+                    Ok("Command cancelled by user".to_string())
                 }
             }
         };
@@ -863,6 +928,329 @@ impl TuiRunner {
                 Ok(format!("Unknown mode: {}. Switched to normal mode.", mode))
             }
         }
+    }
+
+    /// Handle question intent - answer directly without commands
+    async fn handle_question(&mut self, question: &str) -> Result<String> {
+        // For questions, we need to generate an answer using AI
+        let client = reqwest::Client::new();
+
+        let cwd = std::env::current_dir()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| "/home/user".to_string());
+
+        let msgs = vec![domain::session::Message {
+            role: "system".into(),
+            content: "You are a helpful AI assistant. Answer questions concisely and directly. Do not generate commands.".into(),
+        }, domain::session::Message {
+            role: "user".into(),
+            content: format!("Current directory: {}. Question: {}", cwd, question),
+        }];
+
+        let req = ChatRequest {
+            model: &self.app.config.model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let resp = client
+            .post(&self.app.config.endpoint)
+            .json(&req)
+            .send()
+            .await?;
+
+        let raw = resp.text().await?;
+
+        // Handle streaming response (NDJSON)
+        let lines: Vec<&str> = raw.lines().collect();
+        for line in lines.into_iter().rev() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            if let Ok(v) = serde_json::from_str::<ChatResponse>(line) {
+                if v.message.role == "assistant" {
+                    return Ok(v.message.content.trim().to_string());
+                }
+            }
+        }
+
+        // JSON parse first (non-streaming)
+        if let Ok(v) = serde_json::from_str::<ChatResponse>(&raw) {
+            return Ok(v.message.content.trim().to_string());
+        }
+
+        Ok("Could not generate answer".to_string())
+    }
+
+    /// Handle file read intent
+    async fn handle_file_read(&mut self, request: &str) -> Result<String> {
+        // Use AI to determine what files to read
+        let client = reqwest::Client::new();
+
+        let cwd = std::env::current_dir()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| "/home/user".to_string());
+
+        let msgs = vec![domain::session::Message {
+            role: "user".into(),
+            content: format!(
+                "Based on this request: '{}'\nCurrent directory: {}\n\nSuggest specific files to read. Return only a JSON array of file paths, no other text.",
+                request, cwd
+            ),
+        }];
+
+        let req = ChatRequest {
+            model: &self.app.config.model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let resp = client
+            .post(&self.app.config.endpoint)
+            .json(&req)
+            .send()
+            .await?;
+
+        let raw = resp.text().await?;
+
+        // Parse JSON array of file paths
+        if let Ok(file_paths) = serde_json::from_str::<Vec<String>>(&raw) {
+            let mut results = Vec::new();
+            for path in file_paths {
+                match std::fs::read_to_string(&path) {
+                    Ok(content) => {
+                        results.push(format!("=== {} ===\n{}", path, content));
+                    }
+                    Err(e) => {
+                        results.push(format!("Error reading {}: {}", path, e));
+                    }
+                }
+            }
+            Ok(results.join("\n\n"))
+        } else {
+            Ok(format!(
+                "Could not determine files to read for: {}",
+                request
+            ))
+        }
+    }
+
+    /// Handle file edit intent
+    async fn handle_file_edit(&mut self, request: &str) -> Result<String> {
+        // Use AI to determine what file edits to make
+        let client = reqwest::Client::new();
+
+        let cwd = std::env::current_dir()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| "/home/user".to_string());
+
+        let msgs = vec![domain::session::Message {
+            role: "user".into(),
+            content: format!(
+                "Based on this edit request: '{}'\nCurrent directory: {}\n\nGenerate a JSON object with file edits. Format:\n{{
+  \"edits\": [
+    {{
+      \"file_path\": \"path/to/file\",
+      \"old_string\": \"exact text to replace\",
+      \"new_string\": \"replacement text\"
+    }}
+  ]
+}}\n\nOnly output valid JSON, no explanation.",
+                request, cwd
+            ),
+        }];
+
+        let req = ChatRequest {
+            model: &self.app.config.model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let resp = client
+            .post(&self.app.config.endpoint)
+            .json(&req)
+            .send()
+            .await?;
+
+        let raw = resp.text().await?;
+
+        // Parse JSON response
+        #[derive(Deserialize)]
+        struct EditSpec {
+            file_path: String,
+            old_string: String,
+            new_string: String,
+        }
+
+        #[derive(Deserialize)]
+        struct EditPlan {
+            edits: Vec<EditSpec>,
+        }
+
+        if let Ok(plan) = serde_json::from_str::<EditPlan>(&raw) {
+            let mut results = Vec::new();
+
+            for edit in plan.edits {
+                // Read the file first
+                match std::fs::read_to_string(&edit.file_path) {
+                    Ok(content) => {
+                        if content.contains(&edit.old_string) {
+                            // Apply the edit
+                            let new_content = content.replace(&edit.old_string, &edit.new_string);
+                            match std::fs::write(&edit.file_path, &new_content) {
+                                Ok(_) => {
+                                    results.push(format!(
+                                        "Edited {}: replaced '{}' with '{}'",
+                                        edit.file_path, edit.old_string, edit.new_string
+                                    ));
+                                }
+                                Err(e) => {
+                                    results
+                                        .push(format!("Failed to write {}: {}", edit.file_path, e));
+                                }
+                            }
+                        } else {
+                            results.push(format!(
+                                "Could not find '{}' in {}",
+                                edit.old_string, edit.file_path
+                            ));
+                        }
+                    }
+                    Err(e) => {
+                        results.push(format!("Could not read {}: {}", edit.file_path, e));
+                    }
+                }
+            }
+
+            Ok(results.join("\n"))
+        } else {
+            Ok(format!("Could not parse edit plan for: {}", request))
+        }
+    }
+
+    /// Handle file search intent
+    async fn handle_file_search(&mut self, request: &str) -> Result<String> {
+        // Use AI to determine search pattern
+        let client = reqwest::Client::new();
+
+        let msgs = vec![domain::session::Message {
+            role: "user".into(),
+            content: format!(
+                "Convert this search request to a grep command: '{}'\nReturn only the grep command, no explanation.",
+                request
+            ),
+        }];
+
+        let req = ChatRequest {
+            model: &self.app.config.model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let resp = client
+            .post(&self.app.config.endpoint)
+            .json(&req)
+            .send()
+            .await?;
+
+        let raw = resp.text().await?;
+
+        // Extract command and execute
+        let command = raw.trim().trim_matches('"');
+        if command.starts_with("grep") {
+            self.execute_shell_command(command).await
+        } else {
+            Ok(format!(
+                "Could not generate search command for: {}",
+                request
+            ))
+        }
+    }
+
+    /// Classify user intent from prompt
+    async fn classify_intent(&self, prompt: &str) -> Result<Intent> {
+        let client = reqwest::Client::new();
+
+        let cwd = std::env::current_dir()
+            .map(|p| p.display().to_string())
+            .unwrap_or_else(|_| "/home/user".to_string());
+
+        let system = r#"You are an AI assistant that classifies user prompts into specific intent categories.
+
+Analyze the user's prompt and respond with a JSON object containing:
+- intent_type: One of "Question", "Command", "FileRead", "FileEdit", "FileSearch", "MultiStep", "Unknown"
+- description: Brief description of what the user wants
+- confidence: Number between 0.0 and 1.0 indicating confidence
+- details: Optional additional details (can be null)
+
+Intent categories:
+- Question: User is asking for information, explanation, or advice (answer directly)
+- Command: User wants to execute a single command or operation
+- FileRead: User wants to read/view file contents
+- FileEdit: User wants to modify or create files
+- FileSearch: User wants to search for files or content within files
+- MultiStep: Complex task requiring multiple steps or commands
+- Unknown: Cannot determine intent
+
+Examples:
+"what is the capital of France?" -> Question
+"list files in current directory" -> Command
+"show me the contents of main.rs" -> FileRead
+"add error handling to this function" -> FileEdit
+"find all TODO comments" -> FileSearch
+"set up a new React project" -> MultiStep
+
+Output ONLY valid JSON, no other text."#;
+
+        let msgs = vec![
+            domain::session::Message {
+                role: "system".into(),
+                content: system.into(),
+            },
+            domain::session::Message {
+                role: "user".into(),
+                content: format!("Current directory: {}\n\nPrompt: {}", cwd, prompt),
+            },
+        ];
+
+        let req = ChatRequest {
+            model: &self.app.config.model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let resp = client
+            .post(&self.app.config.endpoint)
+            .json(&req)
+            .send()
+            .await?;
+
+        let raw = resp.text().await?;
+
+        // Try to parse JSON directly
+        if let Ok(intent) = serde_json::from_str::<Intent>(&raw) {
+            return Ok(intent);
+        }
+
+        // Try to extract JSON from response
+        if let Some(json) = raw.find('{').and_then(|start| {
+            raw[start..]
+                .find('}')
+                .map(|end| &raw[start..start + end + 1])
+        }) {
+            if let Ok(intent) = serde_json::from_str::<Intent>(json) {
+                return Ok(intent);
+            }
+        }
+
+        // Fallback to Unknown intent
+        Ok(Intent {
+            intent_type: IntentType::Unknown,
+            description: "Could not classify intent".to_string(),
+            confidence: 0.0,
+            details: Some(raw),
+        })
     }
 
     /// Execute a vision mode command using ChatGPT browser automation
