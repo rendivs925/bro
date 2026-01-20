@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use crossterm::{
+    cursor::{Hide, Show},
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -65,10 +66,12 @@ impl TuiApp {
 
         Ok(Self {
             cli_app,
-            current_mode: TuiMode::Normal,
+            current_mode: TuiMode::Insert,
             input_buffer: String::new(),
             cursor_position: 0,
-            status_message: "Ready".to_string(),
+            status_message:
+                "INSERT - Type your command, press Enter to execute, Esc for normal mode"
+                    .to_string(),
             show_overlay: None,
             session_list: vec![
                 "default_session".to_string(),
@@ -100,7 +103,8 @@ impl TuiRunner {
         execute!(
             self.terminal.backend_mut(),
             EnterAlternateScreen,
-            EnableMouseCapture
+            EnableMouseCapture,
+            Show
         )?;
         self.terminal.clear()?;
 
@@ -120,7 +124,7 @@ impl TuiRunner {
                             }
                         }
                         TuiMode::Insert => {
-                            self.handle_insert_mode(key);
+                            self.handle_insert_mode(key).await?;
                         }
                         TuiMode::Command => {
                             if self.handle_command_mode(key).await? {
@@ -137,7 +141,8 @@ impl TuiRunner {
         execute!(
             self.terminal.backend_mut(),
             LeaveAlternateScreen,
-            DisableMouseCapture
+            DisableMouseCapture,
+            Show
         )?;
 
         Ok(())
@@ -584,8 +589,13 @@ impl TuiRunner {
             KeyCode::Char(c) => {
                 self.app.input_buffer.insert(self.app.cursor_position, c);
                 self.app.cursor_position += 1;
+                // Update status to show current input
+                self.app.status_message = format!("Typing: {} chars", self.app.input_buffer.len());
             }
-            _ => {}
+            _ => {
+                // Debug: show what key was pressed
+                self.app.status_message = format!("Unknown key: {:?}", key.code);
+            }
         }
         Ok(false)
     }
@@ -1116,14 +1126,16 @@ impl TuiRunner {
             .wrap(Wrap { trim: true });
         f.render_widget(input, content_chunks[1]);
 
-        // Set cursor position for input
-        let cursor_x = if app.current_mode == TuiMode::Command {
-            content_chunks[1].x + 1 + app.cursor_position as u16 + 1 // +1 for ':' prefix
-        } else {
-            content_chunks[1].x + 1 + app.cursor_position as u16
-        };
-        let cursor_y = content_chunks[1].y + 1;
-        f.set_cursor(cursor_x, cursor_y);
+        // Set cursor position for input (only in insert/command modes)
+        if app.current_mode == TuiMode::Insert || app.current_mode == TuiMode::Command {
+            let cursor_x = if app.current_mode == TuiMode::Command {
+                content_chunks[1].x + 1 + app.cursor_position as u16 + 1 // +1 for ':' prefix
+            } else {
+                content_chunks[1].x + 1 + app.cursor_position as u16
+            };
+            let cursor_y = content_chunks[1].y + 1;
+            f.set_cursor(cursor_x, cursor_y);
+        }
 
         // Message area
         let message_block = Block::default().borders(Borders::ALL).title("Status");
@@ -1149,66 +1161,19 @@ impl TuiRunner {
 
         let hints = match app.current_mode {
             TuiMode::Normal => {
-                if let Some(mode) = &app.tui_mode {
-                    match mode.as_str() {
-                        "plan" => vec![
-                            format!("plan {}", "command"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                        "build" => vec![
-                            format!("build {}", "command"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                        "run" => vec![
-                            format!("run {}", "command"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                        "chat" => vec![
-                            format!("chat {}", "message"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                        "rag" => vec![
-                            format!("rag {}", "query"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                        _ => vec![
-                            format!("i {}", "insert"),
-                            format!("Cmd+P {}", "palette"),
-                            format!("Cmd+S {}", "sessions"),
-                            format!("Cmd+K {}", "tools"),
-                            format!(": {}", "cmd"),
-                        ],
-                    }
-                } else {
-                    vec![
-                        format!("i {}", "insert"),
-                        format!("Cmd+P {}", "palette"),
-                        format!("Cmd+S {}", "sessions"),
-                        format!("Cmd+K {}", "tools"),
-                        format!(": {}", "cmd"),
-                    ]
-                }
+                vec![
+                    format!("i {}", "insert"),
+                    format!("Cmd+P {}", "palette"),
+                    format!("Cmd+S {}", "sessions"),
+                    format!("Cmd+K {}", "tools"),
+                    format!(": {}", "cmd"),
+                ]
             }
             TuiMode::Insert => vec![
                 format!("esc {}", "normal"),
                 format!("Enter {}", "execute"),
-                format!("hjkl {}", "move"),
-                format!("w/b {}", "words"),
+                format!("Backspace {}", "delete"),
+                format!("Arrows {}", "move"),
                 "".to_string(),
             ],
             TuiMode::Command => vec![
