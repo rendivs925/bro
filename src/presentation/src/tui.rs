@@ -315,7 +315,7 @@ impl TuiRunner {
         loop {
             // Draw the UI
             let app = &self.app;
-            self.terminal.draw(move |f| draw_ui(f, app))?;
+            self.terminal.draw(move |f| Self::draw_ui(f, app))?;
 
             // Handle events
             if event::poll(Duration::from_millis(100))? {
@@ -1731,13 +1731,13 @@ Output ONLY valid JSON, no other text."#;
             .split(size);
 
         // Draw header
-        draw_header(f, chunks[0], app);
-        draw_main_content(f, chunks[1], app);
-        draw_status_bar(f, chunks[2], app);
+        Self::draw_header(f, chunks[0], app);
+        Self::draw_main_content(f, chunks[1], app);
+        Self::draw_status_bar(f, chunks[2], app);
 
         // Draw overlay if present
         if let Some(overlay) = &app.show_overlay {
-            draw_overlay(f, overlay.clone(), app);
+            Self::draw_overlay(f, overlay.clone(), app);
         }
     }
 
@@ -1872,13 +1872,13 @@ Output ONLY valid JSON, no other text."#;
     /// Draw the main content area
     fn draw_main_content(f: &mut Frame, area: Rect, app: &TuiApp) {
         match app.agent_status.phase {
-            AgentPhase::Idle => draw_idle_content(f, area, app),
-            AgentPhase::ClassifyingIntent => draw_classifying_content(f, area, app),
-            AgentPhase::Planning => draw_planning_content(f, area, app),
-            AgentPhase::AwaitingApproval => draw_approval_content(f, area, app),
-            AgentPhase::Executing { .. } => draw_execution_content(f, area, app),
-            AgentPhase::Complete => draw_complete_content(f, area, app),
-            AgentPhase::Error => draw_error_content(f, area, app),
+            AgentPhase::Idle => Self::draw_idle_content(f, area, app),
+            AgentPhase::ClassifyingIntent => Self::draw_classifying_content(f, area, app),
+            AgentPhase::Planning => Self::draw_planning_content(f, area, app),
+            AgentPhase::AwaitingApproval => Self::draw_approval_content(f, area, app),
+            AgentPhase::Executing { .. } => Self::draw_execution_content(f, area, app),
+            AgentPhase::Complete => Self::draw_complete_content(f, area, app),
+            AgentPhase::Error => Self::draw_error_content(f, area, app),
         }
     }
 
@@ -2281,25 +2281,27 @@ Output ONLY valid JSON, no other text."#;
 
     /// Draw overlay windows
     fn draw_overlay(f: &mut Frame, overlay: Overlay, app: &TuiApp) {
-        let area = centered_rect(60, 40, f.size());
+        let area = Self::centered_rect(60, 40, f.size());
         f.render_widget(Clear, area);
 
         match overlay {
-            Overlay::Sessions => draw_sessions_overlay(f, area, app),
-            Overlay::Tools => draw_tools_overlay(f, area, app),
-            Overlay::Context => draw_context_overlay(f, area, app),
-            Overlay::Palette => draw_palette_overlay(f, area, app),
+            Overlay::Sessions => Self::draw_sessions_overlay(f, area, app),
+            Overlay::Tools => Self::draw_tools_overlay(f, area, app),
+            Overlay::Context => Self::draw_context_overlay(f, area, app),
+            Overlay::Palette => Self::draw_palette_overlay(f, area, app),
             Overlay::Confirmation {
                 message,
                 default_yes,
                 ..
-            } => draw_confirmation_overlay(f, area, &message, default_yes),
+            } => Self::draw_confirmation_overlay(f, area, &message, default_yes),
             Overlay::Response {
                 title,
                 content,
                 scroll_offset,
-            } => draw_response_overlay(f, area, &title, &content, scroll_offset),
-            Overlay::Thinking { message, step } => draw_thinking_overlay(f, area, &message, step),
+            } => Self::draw_response_overlay(f, area, &title, &content, scroll_offset),
+            Overlay::Thinking { message, step } => {
+                Self::draw_thinking_overlay(f, area, &message, step)
+            }
         }
     }
 
