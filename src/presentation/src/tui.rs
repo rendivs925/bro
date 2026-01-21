@@ -50,7 +50,10 @@ struct ChatRequest<'a> {
 
 #[derive(Deserialize, Debug)]
 struct ChatResponse {
+    model: Option<String>,
+    created_at: Option<String>,
     message: domain::session::Message,
+    done: Option<bool>,
 }
 
 /// Agent execution phase
@@ -1300,13 +1303,26 @@ impl TuiRunner {
             stream: false,
         };
 
-        let resp = client
-            .post(&self.app.config.ollama_base_url)
-            .json(&req)
-            .send()
-            .await?;
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        let resp = client.post(&url).json(&req).send().await.map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to connect to Ollama at {}: {}. Make sure Ollama is running.",
+                url,
+                e
+            )
+        })?;
 
         let raw = resp.text().await?;
+
+        // Check if the response is an error
+        if let Ok(error_resp) = serde_json::from_str::<serde_json::Value>(&raw) {
+            if let Some(error) = error_resp.get("error") {
+                return Err(anyhow::anyhow!("Ollama error: {}", error));
+            }
+        }
 
         // Handle streaming response (NDJSON)
         let lines: Vec<&str> = raw.lines().collect();
@@ -1327,7 +1343,8 @@ impl TuiRunner {
             return Ok(v.message.content.trim().to_string());
         }
 
-        Ok("Could not generate answer".to_string())
+        // If we can't parse the response, show the raw response for debugging
+        Ok(format!("Raw Ollama response (parsing failed): {}", raw))
     }
 
     /// Handle file read intent
@@ -1353,11 +1370,11 @@ impl TuiRunner {
             stream: false,
         };
 
-        let resp = client
-            .post(&self.app.config.ollama_base_url)
-            .json(&req)
-            .send()
-            .await?;
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        let resp = client.post(&url).json(&req).send().await?;
 
         let raw = resp.text().await?;
 
@@ -1414,11 +1431,11 @@ impl TuiRunner {
             stream: false,
         };
 
-        let resp = client
-            .post(&self.app.config.ollama_base_url)
-            .json(&req)
-            .send()
-            .await?;
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        let resp = client.post(&url).json(&req).send().await?;
 
         let raw = resp.text().await?;
 
@@ -1495,11 +1512,11 @@ impl TuiRunner {
             stream: false,
         };
 
-        let resp = client
-            .post(&self.app.config.ollama_base_url)
-            .json(&req)
-            .send()
-            .await?;
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        let resp = client.post(&url).json(&req).send().await?;
 
         let raw = resp.text().await?;
 
@@ -1517,6 +1534,27 @@ impl TuiRunner {
 
     /// Classify user intent from prompt
     async fn classify_intent(&self, prompt: &str) -> Result<Intent> {
+        // Simple heuristic: if it starts with question words or contains "how to", classify as Question
+        let lower = prompt.to_lowercase();
+        if lower.starts_with("how ")
+            || lower.starts_with("what ")
+            || lower.starts_with("why ")
+            || lower.starts_with("when ")
+            || lower.starts_with("where ")
+            || lower.starts_with("who ")
+            || lower.starts_with("which ")
+            || lower.contains("how to")
+            || lower.starts_with("can you")
+            || lower.starts_with("could you")
+        {
+            return Ok(Intent {
+                intent_type: IntentType::Question,
+                description: format!("Question: {}", prompt),
+                confidence: 0.9,
+                details: None,
+            });
+        }
+
         let client = reqwest::Client::new();
 
         let cwd = std::env::current_dir()
@@ -1567,11 +1605,11 @@ Output ONLY valid JSON, no other text."#;
             stream: false,
         };
 
-        let resp = client
-            .post(&self.app.config.ollama_base_url)
-            .json(&req)
-            .send()
-            .await?;
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        let resp = client.post(&url).json(&req).send().await?;
 
         let raw = resp.text().await?;
 
