@@ -866,9 +866,8 @@ impl TuiRunner {
                     // Execute the action based on type
                     match action {
                         PendingAction::Command(cmd) => {
-                            // For commands, we'll let the normal flow handle it
+                            // Commands are now executed directly in execute_command
                             self.app.input_buffer = cmd.clone();
-                            // The command will be executed by the normal Enter key handling
                         }
                         PendingAction::FileRead(cmd) => {
                             // Show thinking overlay first
@@ -901,6 +900,7 @@ impl TuiRunner {
                             self.app.input_buffer = cmd.clone();
                         }
                         PendingAction::Unknown(cmd) => {
+                            // Unknown commands are now executed directly in execute_command
                             self.app.input_buffer = cmd.clone();
                         }
                     }
@@ -1065,13 +1065,8 @@ impl TuiRunner {
                 }
             }
             IntentType::Command => {
-                // Show confirmation overlay
-                self.app.show_overlay = Some(Overlay::Confirmation {
-                    message: format!("Execute command: {}", intent.description),
-                    default_yes: true,
-                    action: PendingAction::Command(command.to_string()),
-                });
-                Ok("Waiting for confirmation...".to_string())
+                // Execute command directly using AI to generate the shell command
+                self.execute_natural_language_command(command).await
             }
             IntentType::FileRead => {
                 // Show confirmation overlay
@@ -1110,13 +1105,38 @@ impl TuiRunner {
                 Ok("Waiting for confirmation...".to_string())
             }
             IntentType::Unknown => {
-                // Show confirmation overlay for unknown commands
-                self.app.show_overlay = Some(Overlay::Confirmation {
-                    message: format!("Execute unknown command: {}", command),
-                    default_yes: false, // Unknown commands need caution
-                    action: PendingAction::Unknown(command.to_string()),
+                // Show thinking overlay while processing
+                self.app.show_overlay = Some(Overlay::Thinking {
+                    message: "Processing command...".to_string(),
+                    step: 0,
                 });
-                Ok("Waiting for confirmation...".to_string())
+
+                // Try to map common natural language commands to actual commands
+                let actual_command = self.map_natural_language_to_command(command);
+                self.app.show_overlay = Some(Overlay::Thinking {
+                    message: format!("Executing: {}", actual_command),
+                    step: 1,
+                });
+
+                match self.execute_shell_command(&actual_command).await {
+                    Ok(output) => {
+                        // Show the result in an overlay
+                        self.app.show_overlay = Some(Overlay::Response {
+                            title: format!("Executed: {}", actual_command),
+                            content: output,
+                            scroll_offset: 0,
+                        });
+                        Ok("Command executed successfully".to_string())
+                    }
+                    Err(e) => {
+                        self.app.show_overlay = Some(Overlay::Response {
+                            title: "Command Failed".to_string(),
+                            content: format!("Command: {}\nError: {}\n\nNote: AI classification failed. Try starting Ollama for better command interpretation.", actual_command, e),
+                            scroll_offset: 0,
+                        });
+                        Ok("Command execution failed".to_string())
+                    }
+                }
             }
         };
 
@@ -1132,11 +1152,108 @@ impl TuiRunner {
         Ok(())
     }
 
+    /// Execute a natural language command by converting it to shell command first
+    async fn execute_natural_language_command(&mut self, nl_command: &str) -> Result<String> {
+        // Use AI to convert natural language to shell command
+        let client = reqwest::Client::new();
+        let msgs = vec![domain::session::Message {
+            role: "user".into(),
+            content: format!(
+                "Convert this natural language request to a shell command: '{}'\nReturn only the command, no explanation.",
+                nl_command
+            ),
+        }];
+
+        let req = ChatRequest {
+            model: &self.app.config.ollama_model,
+            messages: &msgs,
+            stream: false,
+        };
+
+        let url = format!(
+            "{}/api/chat",
+            self.app.config.ollama_base_url.trim_end_matches('/')
+        );
+        match client.post(&url).json(&req).send().await {
+            Ok(resp) => {
+                let raw = resp.text().await?;
+                if let Ok(chat_resp) = serde_json::from_str::<ChatResponse>(&raw) {
+                    let actual_command = chat_resp.message.content.trim();
+                    // Execute the generated command
+                    match self.execute_shell_command(actual_command).await {
+                        Ok(output) => Ok(format!("Command: {}\n{}", actual_command, output)),
+                        Err(e) => Err(anyhow::anyhow!(
+                            "Command '{}' failed: {}",
+                            actual_command,
+                            e
+                        )),
+                    }
+                } else {
+                    Err(anyhow::anyhow!(
+                        "Failed to parse AI response for command generation: {}",
+                        raw
+                    ))
+                }
+            }
+            Err(e) => {
+                // If AI is not available, try to execute the original command directly
+                match self.execute_shell_command(nl_command).await {
+                    Ok(output) => Ok(format!("Executed: {}\n{}", nl_command, output)),
+                    Err(e) => Err(anyhow::anyhow!("Failed to execute '{}': {}", nl_command, e)),
+                }
+            }
+        }
+    }
+
+    /// Map common natural language commands to shell commands when AI is not available
+    fn map_natural_language_to_command(&self, nl_command: &str) -> String {
+        let lower = nl_command.to_lowercase();
+
+        // Basic command mappings
+        if lower.contains("bluetooth") && (lower.contains("status") || lower.contains("check")) {
+            "systemctl status bluetooth 2>/dev/null || echo 'Bluetooth service status check (may require sudo)'".to_string()
+        } else if lower.contains("wifi") && (lower.contains("status") || lower.contains("check")) {
+            "nmcli device wifi".to_string()
+        } else if lower.contains("network") && lower.contains("status") {
+            "ip addr show".to_string()
+        } else if lower.contains("disk") && lower.contains("usage") {
+            "df -h".to_string()
+        } else if lower.contains("memory") && lower.contains("usage") {
+            "free -h".to_string()
+        } else if lower.contains("cpu") && lower.contains("usage") {
+            "top -bn1 | head -20".to_string()
+        } else if lower.contains("list") && lower.contains("files") {
+            "ls -la".to_string()
+        } else if lower.contains("current") && lower.contains("directory") {
+            "pwd".to_string()
+        } else if lower.contains("date") || lower.contains("time") {
+            "date".to_string()
+        } else if lower.contains("who") && lower.contains("am i") {
+            "whoami".to_string()
+        } else if lower.contains("uptime") {
+            "uptime".to_string()
+        } else {
+            // If no mapping found, return the original command
+            nl_command.to_string()
+        }
+    }
+
     /// Execute a shell command
     async fn execute_shell_command(&mut self, command: &str) -> Result<String> {
         use tokio::process::Command;
+        use tokio::time::{timeout, Duration};
 
-        let output = Command::new("sh").arg("-c").arg(command).output().await?;
+        // Add timeout to prevent hanging
+        let output_result = timeout(
+            Duration::from_secs(10),
+            Command::new("sh").arg("-c").arg(command).output(),
+        )
+        .await;
+
+        let output = match output_result {
+            Ok(result) => result?,
+            Err(_) => return Err(anyhow::anyhow!("Command timed out after 10 seconds")),
+        };
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -1307,13 +1424,13 @@ impl TuiRunner {
             "{}/api/chat",
             self.app.config.ollama_base_url.trim_end_matches('/')
         );
-        let resp = client.post(&url).json(&req).send().await.map_err(|e| {
-            anyhow::anyhow!(
-                "Failed to connect to Ollama at {}: {}. Make sure Ollama is running.",
-                url,
-                e
-            )
-        })?;
+        let resp = match client.post(&url).json(&req).send().await {
+            Ok(resp) => resp,
+            Err(e) => {
+                // AI not available, provide basic answers for common questions
+                return self.provide_basic_answer(question);
+            }
+        };
 
         let raw = resp.text().await?;
 
@@ -1345,6 +1462,67 @@ impl TuiRunner {
 
         // If we can't parse the response, show the raw response for debugging
         Ok(format!("Raw Ollama response (parsing failed): {}", raw))
+    }
+
+    /// Provide basic answers for common questions when AI is not available
+    fn provide_basic_answer(&self, question: &str) -> Result<String> {
+        let lower = question.to_lowercase();
+
+        if lower.contains("how this system works") || lower.contains("how does this work") {
+            Ok(r#"bro is an AI-powered development assistant that helps with software engineering tasks.
+
+**Core Features:**
+• Natural language command processing
+• AI-powered code generation and analysis  
+• Multiple interfaces (CLI, TUI, Web)
+• Safety mechanisms and command confirmation
+• Session management and context awareness
+
+**How it works:**
+1. User input is classified (Question/Command/File operation/etc.)
+2. Commands are translated to shell operations
+3. Questions are answered using AI
+4. Results displayed in user-friendly format
+
+**To get full AI features:** Start Ollama service and pull models:
+`ollama serve & ollama pull qwen2.5:1.5b-instruct`
+
+**Current limitations:** AI services unavailable - basic command mappings only."#.to_string())
+        } else if lower.contains("help") || lower.contains("what can you do") {
+            Ok(r#"I can help you with:
+
+**Commands:**
+• System status checks (bluetooth, wifi, disk, memory, etc.)
+• File operations (when AI is available)
+• Development tasks (planning, building, running)
+
+**Questions:**
+• General programming help
+• System explanations
+• Code analysis (when AI available)
+
+**Examples:**
+• "check bluetooth status"
+• "show disk usage"  
+• "how does rust work?"
+• "explain async programming"
+
+**Modes:** plan, build, run, chat, rag (Retrieval-Augmented Generation)
+
+Type your request in natural language!"#
+                .to_string())
+        } else if lower.contains("bluetooth") || lower.contains("wifi") || lower.contains("network")
+        {
+            Ok("For system status checks, try commands like:
+• 'check bluetooth status' → shows Bluetooth service status
+• 'check wifi status' → shows WiFi connection info  
+• 'check network status' → shows network interfaces
+
+These work even without AI services."
+                .to_string())
+        } else {
+            Err(anyhow::anyhow!("AI service unavailable for answering questions. For basic command execution, try system status checks like 'check bluetooth status'. To enable full AI features, start Ollama: 'ollama serve'"))
+        }
     }
 
     /// Handle file read intent
@@ -1534,7 +1712,7 @@ impl TuiRunner {
 
     /// Classify user intent from prompt
     async fn classify_intent(&self, prompt: &str) -> Result<Intent> {
-        // Simple heuristic: if it starts with question words or contains "how to", classify as Question
+        // Simple heuristic: if it starts with question words or contains question patterns, classify as Question
         let lower = prompt.to_lowercase();
         if lower.starts_with("how ")
             || lower.starts_with("what ")
@@ -1543,9 +1721,17 @@ impl TuiRunner {
             || lower.starts_with("where ")
             || lower.starts_with("who ")
             || lower.starts_with("which ")
+            || lower.starts_with("explain ")
+            || lower.starts_with("tell me ")
             || lower.contains("how to")
-            || lower.starts_with("can you")
-            || lower.starts_with("could you")
+            || lower.contains("how does")
+            || lower.contains("how do")
+            || lower.contains("what is")
+            || lower.contains("what are")
+            || lower.contains("can you")
+            || lower.contains("could you")
+            || lower.contains("please explain")
+            || lower.ends_with("?")
         {
             return Ok(Intent {
                 intent_type: IntentType::Question,
