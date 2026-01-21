@@ -4517,8 +4517,6 @@ COMMAND:"#,
 
     /// Handle TUI mode - launch terminal user interface
     async fn handle_tui_mode(&mut self, cli: &Cli) -> Result<()> {
-        println!("🚀 Launching Vibe CLI TUI...");
-
         // Import and run the TUI
         #[cfg(feature = "tui")]
         {
