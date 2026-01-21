@@ -234,7 +234,8 @@ impl TuiApp {
                     total_steps: plan.tool_calls.len(),
                 };
 
-                self.execution_progress.push(format!("Step {}: {}", step_num, tool_call.reasoning));
+                self.execution_progress
+                    .push(format!("Step {}: {}", step_num, tool_call.reasoning));
 
                 // Simulate execution time
                 use tokio::time::{sleep, Duration};
@@ -244,7 +245,8 @@ impl TuiApp {
             // Mark as complete
             self.agent_status.phase = AgentPhase::Complete;
             self.agent_status.execution_time = Some(std::time::Duration::from_secs(6));
-            self.agent_status.tools_used = plan.tool_calls.iter().map(|tc| tc.name.clone()).collect();
+            self.agent_status.tools_used =
+                plan.tool_calls.iter().map(|tc| tc.name.clone()).collect();
             self.agent_status.memory_usage = Some(89 * 1024 * 1024); // 89MB
         }
 
@@ -313,7 +315,7 @@ impl TuiRunner {
         loop {
             // Draw the UI
             let app = &self.app;
-            self.terminal.draw(move |f| Self::draw_ui(f, app))?;
+            self.terminal.draw(move |f| draw_ui(f, app))?;
 
             // Handle events
             if event::poll(Duration::from_millis(100))? {
@@ -352,14 +354,15 @@ impl TuiRunner {
                 KeyCode::Char('y') | KeyCode::Char('Y') => {
                     // Execute the approved plan
                     self.app.show_overlay = None;
-                    self.execute_approved_plan().await?;
+                    self.app.execute_approved_plan().await?;
                     return Ok(false);
                 }
                 KeyCode::Char('e') | KeyCode::Char('E') => {
                     // Edit the plan (placeholder - would open editor)
                     self.app.show_overlay = Some(Overlay::Response {
                         title: "Plan Editing".to_string(),
-                        content: "Plan editing not yet implemented. Press any key to continue.".to_string(),
+                        content: "Plan editing not yet implemented. Press any key to continue."
+                            .to_string(),
                         scroll_offset: 0,
                     });
                     return Ok(false);
@@ -1035,15 +1038,12 @@ impl TuiRunner {
             self.app.history_index = None;
         }
 
-        // Clear input buffer and start agent workflow
+        // Clear input buffer
         self.app.input_buffer.clear();
         self.app.cursor_position = 0;
 
-        // Start the agent workflow
-        self.start_agent_workflow(command.to_string()).await?;
-
-        Ok(())
-    }
+        // Classify intent
+        let intent = self.classify_intent(command).await?;
 
         let result = match intent.intent_type {
             IntentType::Question => {
@@ -1731,17 +1731,13 @@ Output ONLY valid JSON, no other text."#;
             .split(size);
 
         // Draw header
-        Self::draw_header(f, chunks[0], app);
+        draw_header(f, chunks[0], app);
+        draw_main_content(f, chunks[1], app);
+        draw_status_bar(f, chunks[2], app);
 
-        // Draw main content
-        Self::draw_main_content(f, chunks[1], app);
-
-        // Draw status bar
-        Self::draw_status_bar(f, chunks[2], app);
-
-        // Draw overlay if active
+        // Draw overlay if present
         if let Some(overlay) = &app.show_overlay {
-            Self::draw_overlay(f, overlay.clone(), app);
+            draw_overlay(f, overlay.clone(), app);
         }
     }
 
@@ -1876,13 +1872,13 @@ Output ONLY valid JSON, no other text."#;
     /// Draw the main content area
     fn draw_main_content(f: &mut Frame, area: Rect, app: &TuiApp) {
         match app.agent_status.phase {
-            AgentPhase::Idle => Self::draw_idle_content(f, area, app),
-            AgentPhase::ClassifyingIntent => Self::draw_classifying_content(f, area, app),
-            AgentPhase::Planning => Self::draw_planning_content(f, area, app),
-            AgentPhase::AwaitingApproval => Self::draw_approval_content(f, area, app),
-            AgentPhase::Executing { .. } => Self::draw_execution_content(f, area, app),
-            AgentPhase::Complete => Self::draw_complete_content(f, area, app),
-            AgentPhase::Error => Self::draw_error_content(f, area, app),
+            AgentPhase::Idle => draw_idle_content(f, area, app),
+            AgentPhase::ClassifyingIntent => draw_classifying_content(f, area, app),
+            AgentPhase::Planning => draw_planning_content(f, area, app),
+            AgentPhase::AwaitingApproval => draw_approval_content(f, area, app),
+            AgentPhase::Executing { .. } => draw_execution_content(f, area, app),
+            AgentPhase::Complete => draw_complete_content(f, area, app),
+            AgentPhase::Error => draw_error_content(f, area, app),
         }
     }
 
@@ -1906,7 +1902,7 @@ Output ONLY valid JSON, no other text."#;
         } else {
             &app.input_buffer
         };
-        let input_paragraph = Paragraph::new(input_text).block(input_block);
+        let input_paragraph = Paragraph::new(input_text).block(input_block.clone());
         f.render_widget(input_paragraph, content_chunks[0]);
 
         // Cursor rendering for input
@@ -1939,7 +1935,13 @@ Output ONLY valid JSON, no other text."#;
 
         let content = vec![
             Line::from(""),
-            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(format!(
+                "Goal: {}",
+                app.agent_status
+                    .current_goal
+                    .as_deref()
+                    .unwrap_or("Unknown")
+            )),
             Line::from(""),
             Line::from("🔄 Analyzing intent and determining action type..."),
             Line::from(""),
@@ -1960,7 +1962,13 @@ Output ONLY valid JSON, no other text."#;
 
         let content = vec![
             Line::from(""),
-            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(format!(
+                "Goal: {}",
+                app.agent_status
+                    .current_goal
+                    .as_deref()
+                    .unwrap_or("Unknown")
+            )),
             Line::from(""),
             Line::from("🔄 AI is creating a detailed execution plan..."),
             Line::from("   • Analyzing project structure"),
@@ -1994,15 +2002,23 @@ Output ONLY valid JSON, no other text."#;
             .title("📋 Execution Plan Ready");
 
         let plan_summary = if let Some(plan) = &app.current_plan {
-            format!("Plan: {} steps, ~{} min, Risk: Medium",
-                   plan.tool_calls.len(),
-                   plan.tool_calls.len() * 2) // Rough estimate
+            format!(
+                "Plan: {} steps, ~{} min, Risk: Medium",
+                plan.tool_calls.len(),
+                plan.tool_calls.len() * 2
+            ) // Rough estimate
         } else {
             "Plan details loading...".to_string()
         };
 
         let summary_content = vec![
-            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
+            Line::from(format!(
+                "Goal: {}",
+                app.agent_status
+                    .current_goal
+                    .as_deref()
+                    .unwrap_or("Unknown")
+            )),
             Line::from(plan_summary),
             Line::from(""),
             Line::from("Ready for execution - awaiting your approval"),
@@ -2012,9 +2028,7 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(summary_paragraph, content_chunks[0]);
 
         // Plan details (placeholder for now)
-        let details_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Plan Steps");
+        let details_block = Block::default().borders(Borders::ALL).title("Plan Steps");
 
         let details_content = vec![
             Line::from("Step 1: [FileRead] Analyze current structure"),
@@ -2028,9 +2042,9 @@ Output ONLY valid JSON, no other text."#;
 
         // Action hints
         let hints_block = Block::default().borders(Borders::ALL);
-        let hints_content = vec![
-            Line::from("Actions: [y] Execute  [e] Edit Plan  [q] Cancel  [d] Show Details"),
-        ];
+        let hints_content = vec![Line::from(
+            "Actions: [y] Execute  [e] Edit Plan  [q] Cancel  [d] Show Details",
+        )];
         let hints_paragraph = Paragraph::new(hints_content).block(hints_block);
         f.render_widget(hints_paragraph, content_chunks[2]);
     }
@@ -2052,7 +2066,10 @@ Output ONLY valid JSON, no other text."#;
             .title("⚡ Current Execution");
 
         let (current_step, total_steps) = match app.agent_status.phase {
-            AgentPhase::Executing { current_step, total_steps } => (current_step, total_steps),
+            AgentPhase::Executing {
+                current_step,
+                total_steps,
+            } => (current_step, total_steps),
             _ => (0, 0),
         };
 
@@ -2067,11 +2084,10 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(step_paragraph, content_chunks[0]);
 
         // Progress details
-        let progress_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Progress Log");
+        let progress_block = Block::default().borders(Borders::ALL).title("Progress Log");
 
-        let progress_content: Vec<Line> = app.execution_progress
+        let progress_content: Vec<Line> = app
+            .execution_progress
             .iter()
             .rev()
             .take(10)
@@ -2083,9 +2099,7 @@ Output ONLY valid JSON, no other text."#;
 
         // Controls
         let controls_block = Block::default().borders(Borders::ALL);
-        let controls_content = vec![
-            Line::from("Controls: [p] Pause  [q] Abort  [s] Status"),
-        ];
+        let controls_content = vec![Line::from("Controls: [p] Pause  [q] Abort  [s] Status")];
         let controls_paragraph = Paragraph::new(controls_content).block(controls_block);
         f.render_widget(controls_paragraph, content_chunks[2]);
     }
@@ -2109,8 +2123,17 @@ Output ONLY valid JSON, no other text."#;
         let results_content = vec![
             Line::from("SUCCESS: All steps completed successfully"),
             Line::from(""),
-            Line::from(format!("Goal: {}", app.agent_status.current_goal.as_deref().unwrap_or("Unknown"))),
-            Line::from(format!("Duration: {:?}", app.agent_status.execution_time.unwrap_or_default())),
+            Line::from(format!(
+                "Goal: {}",
+                app.agent_status
+                    .current_goal
+                    .as_deref()
+                    .unwrap_or("Unknown")
+            )),
+            Line::from(format!(
+                "Duration: {:?}",
+                app.agent_status.execution_time.unwrap_or_default()
+            )),
             Line::from(format!("Tools Used: {}", app.agent_status.tools_used.len())),
         ];
 
@@ -2135,13 +2158,11 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(details_paragraph, content_chunks[1]);
 
         // Next actions
-        let actions_block = Block::default()
-            .borders(Borders::ALL)
-            .title("Next Actions");
+        let actions_block = Block::default().borders(Borders::ALL).title("Next Actions");
 
-        let actions_content = vec![
-            Line::from("[r] Review changes  [n] New task  [s] Save session  [q] Quit"),
-        ];
+        let actions_content = vec![Line::from(
+            "[r] Review changes  [n] New task  [s] Save session  [q] Quit",
+        )];
 
         let actions_paragraph = Paragraph::new(actions_content).block(actions_block);
         f.render_widget(actions_paragraph, content_chunks[2]);
@@ -2154,7 +2175,10 @@ Output ONLY valid JSON, no other text."#;
             .title("❌ Execution Error")
             .style(Style::default().fg(Color::Red));
 
-        let error_message = app.agent_status.error_message.as_deref()
+        let error_message = app
+            .agent_status
+            .error_message
+            .as_deref()
             .unwrap_or("An unknown error occurred during execution");
 
         let content = vec![
@@ -2191,8 +2215,10 @@ Output ONLY valid JSON, no other text."#;
             AgentPhase::ClassifyingIntent => "Agent: Classifying".to_string(),
             AgentPhase::Planning => "Agent: Planning".to_string(),
             AgentPhase::AwaitingApproval => "Agent: Ready".to_string(),
-            AgentPhase::Executing { current_step, total_steps } =>
-                format!("Agent: Exec {}/{}", current_step, total_steps),
+            AgentPhase::Executing {
+                current_step,
+                total_steps,
+            } => format!("Agent: Exec {}/{}", current_step, total_steps),
             AgentPhase::Complete => "Agent: Complete".to_string(),
             AgentPhase::Error => "Agent: Error".to_string(),
         };
@@ -2202,10 +2228,14 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(agent_widget, status_chunks[0]);
 
         // Performance metrics
-        let confidence = app.agent_status.confidence
+        let confidence = app
+            .agent_status
+            .confidence
             .map(|c| format!("Conf: {:.0}%", c * 100.0))
             .unwrap_or_else(|| "Conf: N/A".to_string());
-        let duration = app.agent_status.execution_time
+        let duration = app
+            .agent_status
+            .execution_time
             .map(|d| format!("Time: {:.1}s", d.as_secs_f32()))
             .unwrap_or_else(|| "Time: N/A".to_string());
         let perf_text = format!("{} | {}", confidence, duration);
@@ -2215,7 +2245,9 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(perf_widget, status_chunks[1]);
 
         // Resource usage
-        let memory = app.agent_status.memory_usage
+        let memory = app
+            .agent_status
+            .memory_usage
             .map(|m| format!("Mem: {}MB", m / 1024 / 1024))
             .unwrap_or_else(|| "Mem: N/A".to_string());
         let tools_count = format!("Tools: {}", app.agent_status.tools_used.len());
@@ -2253,23 +2285,21 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(Clear, area);
 
         match overlay {
-            Overlay::Sessions => Self::draw_sessions_overlay(f, area, app),
-            Overlay::Tools => Self::draw_tools_overlay(f, area, app),
-            Overlay::Context => Self::draw_context_overlay(f, area, app),
-            Overlay::Palette => Self::draw_palette_overlay(f, area, app),
+            Overlay::Sessions => draw_sessions_overlay(f, area, app),
+            Overlay::Tools => draw_tools_overlay(f, area, app),
+            Overlay::Context => draw_context_overlay(f, area, app),
+            Overlay::Palette => draw_palette_overlay(f, area, app),
             Overlay::Confirmation {
                 message,
                 default_yes,
                 ..
-            } => Self::draw_confirmation_overlay(f, area, &message, default_yes),
+            } => draw_confirmation_overlay(f, area, &message, default_yes),
             Overlay::Response {
                 title,
                 content,
                 scroll_offset,
-            } => Self::draw_response_overlay(f, area, &title, &content, scroll_offset),
-            Overlay::Thinking { message, step } => {
-                Self::draw_thinking_overlay(f, area, &message, step)
-            }
+            } => draw_response_overlay(f, area, &title, &content, scroll_offset),
+            Overlay::Thinking { message, step } => draw_thinking_overlay(f, area, &message, step),
         }
     }
 
@@ -2674,23 +2704,24 @@ Output ONLY valid JSON, no other text."#;
         f.render_widget(paragraph, area);
     }
 
-/// Helper function to create a centered rectangle
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
+    /// Helper function to create a centered rectangle
+    fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ])
+            .split(r);
 
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1]
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ])
+            .split(popup_layout[1])[1]
+    }
 }
