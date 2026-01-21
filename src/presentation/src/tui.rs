@@ -23,6 +23,7 @@ use infrastructure::config::Config;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum IntentType {
     Question,
     Command,
@@ -31,6 +32,94 @@ pub enum IntentType {
     FileSearch,
     MultiStep,
     Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum Route {
+    DirectQa,     // Simple Q&A, no tools
+    RetrievalQa,  // Needs docs/history search
+    EditText,     // Rewrite, summarize, translate
+    EditCode,     // Refactor, fix bugs, add features
+    EditImage,    // Modify images
+    EditFile,     // Structured file edits
+    PlanOnly,     // User wants plan, not execution
+    ExecuteTools, // Multi-step with tools
+    NeedClarify,  // Missing info or ambiguous
+    Refuse,       // Policy violation
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum Priority {
+    Low,
+    Normal,
+    High,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ArtifactNeed {
+    None,
+    Text,
+    Code,
+    Image,
+    File,
+    Url,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum Risk {
+    Low,
+    Medium,
+    High,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum Policy {
+    Ok,
+    Restrict,
+    Block,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SafetyDecision {
+    pub risk: Risk,
+    pub policy: Policy,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Signals {
+    pub edit_verbs: bool,
+    pub has_code_block: bool,
+    pub has_attachment: bool,
+    pub tool_verbs: bool,
+    pub question_form: bool,
+    pub has_url: bool,
+    pub has_diff: bool,
+    pub ambiguous: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RouteDecision {
+    pub route: Route,
+    pub priority: Priority,
+    pub confidence: f32,
+    pub needs_tools: bool,
+    pub needs_user_artifact: ArtifactNeed,
+    pub tool_allowlist: Vec<String>,
+    pub safety: SafetyDecision,
+    pub clarifying_question: String,
+    pub signals: Signals,
+    pub reason_short: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct InputContext {
+    pub has_attachments: bool,
+    pub attachment_types: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1203,6 +1292,325 @@ impl TuiRunner {
                 }
             }
         }
+    }
+
+    /// Extract deterministic signals from user input
+    fn extract_signals(&self, input: &str, ctx: &InputContext) -> Signals {
+        let lower = input.to_lowercase();
+
+        // Edit verbs detection
+        let edit_verbs = lower.contains("rewrite")
+            || lower.contains("refactor")
+            || lower.contains("fix")
+            || lower.contains("change")
+            || lower.contains("translate")
+            || lower.contains("summarize")
+            || lower.contains("improve")
+            || lower.contains("make it");
+
+        // Code block detection
+        let has_code_block = input.contains("```")
+            || (input
+                .lines()
+                .filter(|l| l.contains("fn ") || l.contains("let "))
+                .count()
+                > 2);
+
+        // Attachment detection (from UI context)
+        let has_attachment = ctx.has_attachments;
+
+        // Tool verbs detection
+        let tool_verbs = lower.contains("search")
+            || lower.contains("fetch")
+            || lower.contains("download")
+            || lower.contains("run")
+            || lower.contains("compile")
+            || lower.contains("test")
+            || lower.contains("check my")
+            || lower.contains("scan");
+
+        // Question form detection
+        let question_form = lower.starts_with("what ")
+            || lower.starts_with("why ")
+            || lower.starts_with("how ")
+            || lower.starts_with("when ")
+            || lower.starts_with("where ")
+            || lower.starts_with("which ")
+            || lower.starts_with("explain ")
+            || lower.starts_with("tell me ")
+            || lower.contains("how to")
+            || lower.contains("how does")
+            || lower.contains("how do")
+            || lower.contains("what is")
+            || lower.contains("what are")
+            || lower.contains("can you")
+            || lower.contains("could you")
+            || lower.contains("please explain")
+            || lower.ends_with("?");
+
+        // URL detection
+        let has_url = input.contains("http://") || input.contains("https://");
+
+        // Diff detection
+        let has_diff = input
+            .lines()
+            .any(|l| l.starts_with("@@") || l.starts_with("+") || l.starts_with("-"));
+
+        // Ambiguity detection
+        let ambiguous = (lower.contains("make it better") || lower.contains("fix this"))
+            && !has_code_block
+            && !has_attachment
+            && input.len() < 100;
+
+        Signals {
+            edit_verbs,
+            has_code_block,
+            has_attachment,
+            tool_verbs,
+            question_form,
+            has_url,
+            has_diff,
+            ambiguous,
+        }
+    }
+
+    /// Stage A: Deterministic heuristic routing
+    fn stage_a_heuristics(
+        &self,
+        input: &str,
+        signals: &Signals,
+        ctx: &InputContext,
+    ) -> RouteDecision {
+        // REFUSE: Hard policy blocks
+        if input.contains("rm -rf /") || input.contains("sudo su") {
+            return RouteDecision {
+                route: Route::Refuse,
+                priority: Priority::High,
+                confidence: 0.95,
+                needs_tools: false,
+                needs_user_artifact: ArtifactNeed::None,
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::High,
+                    policy: Policy::Block,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "Policy violation: dangerous command".to_string(),
+            };
+        }
+
+        // EDIT_IMAGE: Image attachments or image editing requests
+        if ctx.attachment_types.iter().any(|t| t.starts_with("image/"))
+            || input.to_lowercase().contains("edit this image")
+        {
+            return RouteDecision {
+                route: Route::EditImage,
+                priority: Priority::Normal,
+                confidence: 0.9,
+                needs_tools: true,
+                needs_user_artifact: if ctx.has_attachments {
+                    ArtifactNeed::None
+                } else {
+                    ArtifactNeed::Image
+                },
+                tool_allowlist: vec!["image_edit".to_string()],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: if ctx.has_attachments {
+                    "".to_string()
+                } else {
+                    "Please attach or provide the image you want to edit.".to_string()
+                },
+                signals: signals.clone(),
+                reason_short: "Image editing request detected".to_string(),
+            };
+        }
+
+        // EDIT_CODE: Code blocks + edit verbs
+        if signals.has_code_block && signals.edit_verbs {
+            return RouteDecision {
+                route: Route::EditCode,
+                priority: Priority::Normal,
+                confidence: 0.85,
+                needs_tools: false,
+                needs_user_artifact: ArtifactNeed::None, // Code already present
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "Code editing with payload".to_string(),
+            };
+        }
+
+        // EDIT_TEXT: Edit verbs + long text
+        if signals.edit_verbs && (input.len() > 200 || input.lines().count() > 3) {
+            return RouteDecision {
+                route: Route::EditText,
+                priority: Priority::Normal,
+                confidence: 0.8,
+                needs_tools: false,
+                needs_user_artifact: ArtifactNeed::None,
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "Text editing request".to_string(),
+            };
+        }
+
+        // EXECUTE_TOOLS: Tool verbs or multi-step requests
+        if signals.tool_verbs
+            || input.to_lowercase().contains("compare")
+            || input.to_lowercase().contains("find latest")
+        {
+            return RouteDecision {
+                route: Route::ExecuteTools,
+                priority: Priority::Normal,
+                confidence: 0.8,
+                needs_tools: true,
+                needs_user_artifact: ArtifactNeed::None,
+                tool_allowlist: vec!["web_search".to_string(), "read_file".to_string()],
+                safety: SafetyDecision {
+                    risk: Risk::Medium,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "Multi-step task requiring tools".to_string(),
+            };
+        }
+
+        // PLAN_ONLY: Planning requests
+        if input.to_lowercase().contains("plan")
+            || input.to_lowercase().contains("roadmap")
+            || input.to_lowercase().contains("strategy")
+        {
+            return RouteDecision {
+                route: Route::PlanOnly,
+                priority: Priority::Normal,
+                confidence: 0.75,
+                needs_tools: false,
+                needs_user_artifact: ArtifactNeed::None,
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "Planning request".to_string(),
+            };
+        }
+
+        // DIRECT_QA: Question form without other signals
+        if signals.question_form && !signals.tool_verbs && !signals.edit_verbs {
+            return RouteDecision {
+                route: Route::DirectQa,
+                priority: Priority::Low,
+                confidence: 0.7,
+                needs_tools: false,
+                needs_user_artifact: ArtifactNeed::None,
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: "".to_string(),
+                signals: signals.clone(),
+                reason_short: "General question".to_string(),
+            };
+        }
+
+        // NEED_CLARIFY: Ambiguous or missing info
+        if signals.ambiguous || input.len() < 10 {
+            return RouteDecision {
+                route: Route::NeedClarify,
+                priority: Priority::Normal,
+                confidence: 0.6,
+                needs_tools: false,
+                needs_user_artifact: if signals.edit_verbs {
+                    ArtifactNeed::Text
+                } else {
+                    ArtifactNeed::None
+                },
+                tool_allowlist: vec![],
+                safety: SafetyDecision {
+                    risk: Risk::Low,
+                    policy: Policy::Ok,
+                },
+                clarifying_question: if signals.edit_verbs {
+                    "What text or code do you want me to modify?".to_string()
+                } else {
+                    "Could you be more specific about what you need?".to_string()
+                },
+                signals: signals.clone(),
+                reason_short: "Request needs clarification".to_string(),
+            };
+        }
+
+        // Default fallback
+        RouteDecision {
+            route: Route::NeedClarify,
+            priority: Priority::Low,
+            confidence: 0.5,
+            needs_tools: false,
+            needs_user_artifact: ArtifactNeed::None,
+            tool_allowlist: vec![],
+            safety: SafetyDecision {
+                risk: Risk::Low,
+                policy: Policy::Ok,
+            },
+            clarifying_question: "What would you like me to help you with?".to_string(),
+            signals: signals.clone(),
+            reason_short: "Unclear request".to_string(),
+        }
+    }
+
+    /// Stage C: Apply safety guardrails and final reconciliation
+    fn apply_guardrails(
+        &self,
+        decision: RouteDecision,
+        input: &str,
+        ctx: &InputContext,
+    ) -> RouteDecision {
+        let mut final_decision = decision;
+
+        // Missing artifact override
+        match final_decision.route {
+            Route::EditText if !final_decision.signals.has_code_block && input.len() < 100 => {
+                final_decision.route = Route::NeedClarify;
+                final_decision.clarifying_question =
+                    "Please paste the text you want me to modify.".to_string();
+                final_decision.confidence = final_decision.confidence.min(0.7);
+            }
+            Route::EditCode if !final_decision.signals.has_code_block => {
+                final_decision.route = Route::NeedClarify;
+                final_decision.clarifying_question =
+                    "Please paste the code you want me to modify.".to_string();
+                final_decision.confidence = final_decision.confidence.min(0.7);
+            }
+            _ => {}
+        }
+
+        // Tool allowlist enforcement
+        final_decision.tool_allowlist = match final_decision.route {
+            Route::DirectQa => vec![],
+            Route::RetrievalQa => vec!["retrieve_memory".to_string(), "search_docs".to_string()],
+            Route::ExecuteTools => vec!["web_search".to_string(), "read_file".to_string()],
+            Route::EditImage => vec!["image_edit".to_string()],
+            _ => vec![],
+        };
+
+        final_decision
     }
 
     /// Map common natural language commands to shell commands when AI is not available
